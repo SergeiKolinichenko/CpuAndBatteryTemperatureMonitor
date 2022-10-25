@@ -13,7 +13,7 @@ interface TempsDao {
     fun getTemperatures(): LiveData<List<TempsDbModels>>
 
     @Query("DELETE FROM temperatures")
-    fun clearDatabase()
+    suspend fun clearDatabase()
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun addTemps(tempsDbModels: TempsDbModels)

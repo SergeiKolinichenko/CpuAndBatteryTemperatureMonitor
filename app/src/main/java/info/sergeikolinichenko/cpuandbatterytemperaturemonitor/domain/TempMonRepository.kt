@@ -1,11 +1,12 @@
 package info.sergeikolinichenko.cpuandbatterytemperaturemonitor.domain
 
+import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.domain.models.Temps
+
 /** Created by Sergei Kolinichenko on 25.10.2022 at 07:41 (GMT+3) **/
 
 interface TempMonRepository {
 
-    fun getTemp()
-    fun startServes()
-    fun stopServes()
+    suspend fun clearDb()
+    suspend fun addTemps(temps: Temps)
     fun saveDataCsv()
 }
