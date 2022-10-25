@@ -1,7 +1,8 @@
-package info.sergeikolinichenko.cpuandbatterytemperaturemonitor
+package info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.R
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
