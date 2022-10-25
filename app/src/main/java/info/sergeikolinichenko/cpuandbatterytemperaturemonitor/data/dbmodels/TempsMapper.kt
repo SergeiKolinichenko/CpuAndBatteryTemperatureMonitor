@@ -12,9 +12,13 @@ class TempsMapper {
         tempBat = temps.tempBat
     )
 
-    fun mapDbModelToEntity(tempsDbModels: TempsDbModels) = Temps(
+    private fun mapDbModelToEntity(tempsDbModels: TempsDbModels) = Temps(
         timeStamp = tempsDbModels.timeStamp,
         tempCpu = tempsDbModels.tempCpu,
         tempBat = tempsDbModels.tempBat
     )
+
+    fun mapListDbModelToListEntity(list: List<TempsDbModels>) = list.map {
+        mapDbModelToEntity(it)
+    }
 }

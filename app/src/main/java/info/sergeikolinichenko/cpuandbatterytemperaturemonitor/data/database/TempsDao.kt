@@ -10,7 +10,7 @@ import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.data.dbmodels.Tem
 interface TempsDao {
 
     @Query("SELECT * FROM temperatures")
-    fun getTemperatures(): LiveData<List<TempsDbModels>>
+    suspend fun getTemperatures(): List<TempsDbModels>
 
     @Query("DELETE FROM temperatures")
     suspend fun clearDatabase()

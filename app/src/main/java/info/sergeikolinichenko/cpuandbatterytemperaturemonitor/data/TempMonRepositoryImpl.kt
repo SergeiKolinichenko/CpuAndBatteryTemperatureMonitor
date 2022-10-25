@@ -21,7 +21,16 @@ class TempMonRepositoryImpl(application: Application): TempMonRepository {
         dao.addTemps(mapper.mapEntityToDbModel(temps))
     }
 
-    override fun saveDataCsv() {
-        TODO("Not yet implemented")
+    override suspend fun getAllTemps(): List<Temps> {
+        return mapper.mapListDbModelToListEntity(dao.getTemperatures())
     }
+
+//    override fun getAllTemps(): LiveData<List<Temps>> {
+//        val list: LiveData<List<Temps>> = Transformations.map(
+//            dao.getTemperatures()) {
+//                mapper.mapListDbModelToListEntity(it)
+//            }
+//        return list
+//    }
+
 }

@@ -50,6 +50,13 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
         binding.butClearDb.setOnClickListener {
             viewModel.clearDatabase()
         }
+        binding.butSendFile.setOnClickListener {
+            viewModel.saveCsv()
+        }
+        binding.butExitApp.setOnClickListener {
+            lifecycle.removeObserver(this)
+            finish()
+        }
     }
 
     override fun onDestroy() {
@@ -58,14 +65,13 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
     }
 
     override fun onStop(owner: LifecycleOwner) {
-        Log.d("MyLog", "onStop")
+        Log.d("MyLog", "onStop(owner: LifecycleOwner)")
         val startIntent = Intent(this, ForegroundService::class.java)
         startIntent.putExtra(COMMAND_ID, COMMAND_START)
         startService(startIntent)
     }
 
     override fun onStart(owner: LifecycleOwner) {
-        Log.d("MyLog", "onStart")
         val stopIntent = Intent(this, ForegroundService::class.java)
         stopIntent.putExtra(COMMAND_ID, COMMAND_STOP)
         startService(stopIntent)

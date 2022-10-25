@@ -16,8 +16,8 @@ object Utils {
         return timeFormat.format(this)
     }
 
-    fun Long.getFullDate(timeStamp: Long): String {
+    fun Long.getFullDate(): String {
         val fullDateFormat = SimpleDateFormat("dd.MM.yy HH:mm", Locale.getDefault())
-        return fullDateFormat.format(timeStamp)
+        return fullDateFormat.format(this)
     }
 }
