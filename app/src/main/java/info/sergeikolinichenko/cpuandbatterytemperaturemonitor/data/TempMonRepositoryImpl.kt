@@ -8,7 +8,7 @@ import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.domain.models.Tem
 
 /** Created by Sergei Kolinichenko on 25.10.2022 at 07:52 (GMT+3) **/
 
-class TempMonRepositoryImpl(application: Application): TempMonRepository {
+class TempMonRepositoryImpl(application: Application) : TempMonRepository {
 
     private val dao = AppDatabase.getInstance(application).tempsDao()
     private val mapper = TempsMapper()

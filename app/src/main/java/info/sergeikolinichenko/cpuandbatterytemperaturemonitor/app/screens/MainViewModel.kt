@@ -3,7 +3,6 @@ package info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.screens
 import android.content.Intent
 import android.os.BatteryManager
 import android.os.Environment
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -24,23 +23,27 @@ class MainViewModel(
     private val clearDb: ClearDb,
     private val addTemps: AddTemps,
     private val getAllTemps: GetAllTemps
-): ViewModel() {
+) : ViewModel() {
 
     private var _temps: List<Temps>? = null
     private val temps: List<Temps>
-    get() = _temps ?: throw RuntimeException("List<Temps> equal null")
+        get() = _temps ?: throw RuntimeException("List<Temps> equal null")
 
     private var _timeStamp = MutableLiveData<Long>()
     val timeStamp: LiveData<Long>
-    get() = _timeStamp
+        get() = _timeStamp
 
     private var _tempCpu = MutableLiveData<Float>()
     val tempCpu: LiveData<Float>
-    get() = _tempCpu
+        get() = _tempCpu
 
     private var _tempBat = MutableLiveData<Float>()
     val tempBat: LiveData<Float>
         get() = _tempBat
+
+    private var _message = MutableLiveData<String>()
+    val message: LiveData<String>
+        get() = _message
 
     init {
         getTemperatures()
@@ -73,6 +76,7 @@ class MainViewModel(
         viewModelScope.launch {
             clearDb.invoke()
         }
+        _message.value = "Database cleared"
     }
 
     private fun getTempBat(): Float {
@@ -101,25 +105,36 @@ class MainViewModel(
         viewModelScope.launch {
             _temps = getAllTemps.invoke()
 
-            try {
-                val csvFail = File(Environment.getExternalStoragePublicDirectory(
-                    Environment.DIRECTORY_DOCUMENTS), "file.csv"
+            kotlin.runCatching {
+                val csvFail = File(
+                    Environment.getExternalStoragePublicDirectory(
+                        Environment.DIRECTORY_DOWNLOADS
+                    ), "file.csv"
                 )
-                csvFail.createNewFile()
-                //Log.d("MyLog", "path ${csvFail.absolutePath}")
+                if (!csvFail.exists()) {
+                    csvFail.createNewFile()
+                } else {
+                    csvFail.delete()
+                    csvFail.createNewFile()
+                }
                 val fileOutputStream = FileOutputStream(csvFail)
                 val outputStreamWriter = OutputStreamWriter(fileOutputStream)
-                outputStreamWriter.append("Date and Time, CPU, Battery\n")
-                for (item in temps.indices) {
-                    val dateTime = temps[item].timeStamp.getFullDate()
-                    val tempCpu = temps[item].tempCpu.toString()
-                    val tempBat = temps[item].tempBat.toString()
-                    outputStreamWriter.append( "$dateTime, $tempCpu, $tempBat\n" )
+                try {
+                    outputStreamWriter.append("Date and Time, CPU, Battery\n")
+                    for (item in temps.indices) {
+                        val dateTime = temps[item].timeStamp.getFullDate()
+                        val tempCpu = temps[item].tempCpu.toString()
+                        val tempBat = temps[item].tempBat.toString()
+                        outputStreamWriter.append("$dateTime, $tempCpu, $tempBat\n")
+                    }
+                } catch (e: Exception) {
+                    _message.value = "Writing csv file failed"
                 }
-                outputStreamWriter.close()
-                fileOutputStream.close()
-            }catch (e: Exception) {
-                throw RuntimeException("saveCsv RuntimeException")
+                finally {
+                    outputStreamWriter.close()
+                    fileOutputStream.close()
+                    _message.value = "The csv file is saved in the Download folder"
+                }
             }
         }
     }

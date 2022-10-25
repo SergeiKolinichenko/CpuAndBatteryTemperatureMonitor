@@ -12,7 +12,7 @@ import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.domain.usecases.G
 
 /** Created by Sergei Kolinichenko on 25.10.2022 at 09:04 (GMT+3) **/
 
-class MainViewModelFactory(application: Application): ViewModelProvider.Factory {
+class MainViewModelFactory(application: Application) : ViewModelProvider.Factory {
 
     private val repository = TempMonRepositoryImpl(application)
     private val clearDb = ClearDb(repository)

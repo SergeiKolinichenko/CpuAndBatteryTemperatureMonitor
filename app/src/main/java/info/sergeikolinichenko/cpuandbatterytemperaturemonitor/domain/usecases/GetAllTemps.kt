@@ -1,6 +1,5 @@
 package info.sergeikolinichenko.cpuandbatterytemperaturemonitor.domain.usecases
 
-import androidx.lifecycle.LiveData
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.domain.TempMonRepository
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.domain.models.Temps
 
