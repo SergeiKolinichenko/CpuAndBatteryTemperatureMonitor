@@ -18,11 +18,13 @@ import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.utils.Utils.C
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.utils.Utils.COMMAND_START
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.utils.Utils.COMMAND_STOP
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.utils.Utils.INVALID
+import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.utils.Utils.getTime
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.data.TempMonRepositoryImpl
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.domain.models.Temps
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.domain.usecases.AddTemps
 import kotlinx.coroutines.*
 import java.io.BufferedReader
+import java.io.FileReader
 import java.io.InputStreamReader
 
 /** Created by Sergei Kolinichenko on 25.10.2022 at 10:52 (GMT+3) **/
@@ -92,9 +94,9 @@ class ForegroundService: Service() {
             while (true) {
                 val timeStamp = System.currentTimeMillis()
                 val tempBat = getTempBat()
-                val array = getTempCpu()
+                val array = getTempsCpu()
 
-                val content = "BAT $tempBat CPU @${array[0]} @${array[1]} @${array[2]} @${array[3]} @${array[4]}}"//String.format("CPU: %d BAT: %s", tempCpu.toInt(), tempBat)
+                val content = "Temperature measurement in progress ${timeStamp.getTime()}"//String.format("CPU: %d BAT: %s", tempCpu.toInt(), tempBat)
                 notificationManager?.notify(
                     NOTIFICATION_ID,
                     getNotification(content)
@@ -129,6 +131,56 @@ class ForegroundService: Service() {
                 delay(INTERVAL)
             }
         }
+    }
+
+    private fun getTempsCpu(): List<String> {
+        val listAddresses = arrayOf(
+            "/sys/devices/system/cpu/cpu0/cpufreq/cpu_temp",
+            "/sys/devices/system/cpu/cpu0/cpufreq/FakeShmoo_cpu_temp",
+            "/sys/class/thermal/thermal_zone1/temp",
+            "/sys/class/i2c-adapter/i2c-4/4-004c/temperature",
+            "/sys/devices/platform/tegra-i2c.3/i2c-4/4-004c/temperature",
+            "/sys/devices/platform/omap/omap_temp_sensor.0/temperature",
+            "/sys/devices/platform/tegra_tmon/temp1_input",
+            "/sys/kernel/debug/tegra_thermal/temp_tj",
+            "/sys/devices/platform/s5p-tmu/temperature",
+            "/sys/class/thermal/thermal_zone0/temp",
+            "/sys/devices/virtual/thermal/thermal_zone0/temp",
+            "/sys/class/hwmon/hwmon0/device/temp1_input",
+            "/sys/devices/virtual/thermal/thermal_zone1/temp",
+            "/sys/devices/platform/s5p-tmu/curr_temp",
+            "sys/class/thermal/thermal_zone17/temp",
+            "sys/class/thermal/thermal_zone18/temp",
+            "sys/class/thermal/thermal_zone19/temp",
+            "sys/class/thermal/thermal_zone20/temp",
+            "sys/class/thermal/thermal_zone21/temp",
+            "sys/class/thermal/thermal_zone22/temp"
+        )
+        val tempCpu  = mutableListOf<String>()
+        var reader: BufferedReader? = null
+        for (item in listAddresses.indices) {
+            try {
+                reader =
+                    BufferedReader(FileReader(listAddresses[item]))
+                val line = reader.readLine().toFloat()
+                val result = if (line > 10000) line / 1000
+                else if (line > 1000) line / 100
+                else if (line > 100) line / 10
+                else line
+                if (result > 0) {
+                    tempCpu.add(item, result.toString())
+                } else {
+                    tempCpu.add(item, "not found")
+                }
+
+            }catch (e:Exception) {
+                e.printStackTrace()
+                tempCpu.add(item, "not found")
+            } finally {
+                reader?.close()
+            }
+        }
+        return tempCpu
     }
 
     private fun getTempBat(): String {
