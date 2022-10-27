@@ -10,10 +10,10 @@ import android.content.IntentFilter
 import android.os.BatteryManager
 import android.os.Build
 import android.os.IBinder
-import android.util.Log
 import androidx.core.app.NotificationCompat
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.R
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.screens.MainActivity
+import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.screens.MainViewModel
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.utils.Utils.COMMAND_ID
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.utils.Utils.COMMAND_START
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.utils.Utils.COMMAND_STOP
@@ -91,17 +91,38 @@ class ForegroundService: Service() {
         job = GlobalScope.launch(Dispatchers.Main) {
             while (true) {
                 val timeStamp = System.currentTimeMillis()
-                val tempCpu = getTempCpu()
                 val tempBat = getTempBat()
+                val array = getTempCpu()
 
-                val content = String.format("CPU: %d BAT: %d", tempCpu.toInt(), tempBat.toInt())
+                val content = "BAT $tempBat CPU @${array[0]} @${array[1]} @${array[2]} @${array[3]} @${array[4]}}"//String.format("CPU: %d BAT: %s", tempCpu.toInt(), tempBat)
                 notificationManager?.notify(
                     NOTIFICATION_ID,
                     getNotification(content)
                 )
 
                 val temps = Temps(
-                    timeStamp, tempCpu, tempBat
+                    timeStamp,
+                    array[0],
+                    array[1],
+                    array[2],
+                    array[3],
+                    array[4],
+                    array[5],
+                    array[6],
+                    array[7],
+                    array[8],
+                    array[9],
+                    array[10],
+                    array[11],
+                    array[12],
+                    array[13],
+                    array[14],
+                    array[15],
+                    array[16],
+                    array[17],
+                    array[18],
+                    array[19],
+                    tempBat
                 )
                 addTemps.invoke(temps)
 
@@ -110,26 +131,74 @@ class ForegroundService: Service() {
         }
     }
 
-    private fun getTempBat(): Float {
+    private fun getTempBat(): String {
         val intentFilter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
         val intent = registerReceiver(null, intentFilter)
-        return ((intent?.getIntExtra(
+        val tempBat = (intent?.getIntExtra(
             BatteryManager.EXTRA_TEMPERATURE,
             0
-        ))?.toFloat() ?: 0F) / 10
+        ))?.div(10).toString()
+        return "BAT $tempBat"
     }
 
-    private fun getTempCpu(): Float {
-        val process: Process
+    private fun getTempCpu(): List<String> {
+        val tempCpu  = mutableListOf<String>()
+        var temp: String?
+        var type: String?
+        var count = 0
+        var iteration = 0
+        do {
+            temp = getTemp(iteration)
+            type = getType(iteration)
+            if (temp != null && type != null && temp.toFloat() > 0) {
+                val result = "$type $temp"
+                tempCpu.add(count, result)
+                count++
+                iteration++
+            } else {
+                iteration++
+            }
+        } while (count < MAX_COUNT_TEMP_REGISTERS)
+
+        return tempCpu
+    }
+
+    private fun getTemp(step: Int): String? {
+        val process: Process = Runtime.getRuntime().exec(
+            "cat sys/class/thermal/thermal_zone$step/temp"
+        )
+        val reader =
+            BufferedReader(InputStreamReader(process.inputStream))
         return try {
-            process = Runtime.getRuntime().exec("cat sys/class/thermal/thermal_zone0/temp")
             process.waitFor()
-            val reader =
-                BufferedReader(InputStreamReader(process.inputStream))
-            val line = reader.readLine()
-            line.toFloat() / 1000.0f
-        } catch (e: Exception) {
-            0.0f
+            val line = reader.readLine().toFloat() / 1000.0f
+            line.toString()
+        } catch (e: Exception){
+            e.printStackTrace()
+            null
+        }
+        finally {
+            reader.close()
+            process.destroy()
+        }
+    }
+
+    private fun getType(step: Int): String? {
+        val process: Process = Runtime.getRuntime().exec(
+            "cat sys/class/thermal/thermal_zone$step/type"
+        )
+        val reader =
+            BufferedReader(InputStreamReader(process.inputStream))
+        return try {
+            process.waitFor()
+            reader.readLine()
+        } catch (e: Exception){
+            e.printStackTrace()
+            null
+        }
+        finally {
+            reader.close()
+            process.destroy()
         }
     }
 
@@ -192,5 +261,6 @@ class ForegroundService: Service() {
         private const val CHANNEL_ID = "Channel_ID"
         private const val NOTIFICATION_ID = 777
         private const val INTERVAL = 1000L
+        private const val MAX_COUNT_TEMP_REGISTERS = 20
     }
 }

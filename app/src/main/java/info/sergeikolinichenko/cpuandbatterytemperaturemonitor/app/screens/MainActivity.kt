@@ -42,16 +42,89 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
         checkWritePermission()
 
         // Observers
-        viewModel.timeStamp.observe(this) {
-            binding.tvTime.text = it.getTime()
-        }
-        viewModel.tempCpu.observe(this) {
-            val mesTempCpu = String.format("Temperature CPU: %d", it.toInt())
-            binding.tvTempCpu.text = mesTempCpu
-        }
         viewModel.tempBat.observe(this) {
-            val mesTempBat = String.format("Temperature Bat: %d", it.toInt())
+            val mesTempBat = String.format("Battery: %s", it)
             binding.tvTempBattery.text = mesTempBat
+        }
+        viewModel.tempCpu0.observe(this) {
+            val mesTempCpu = String.format("CPU: %s", it)
+            binding.tvTempCpu0.text = mesTempCpu
+        }
+        viewModel.tempCpu1.observe(this) {
+            val mesTempCpu = String.format("CPU: %s", it)
+            binding.tvTempCpu1.text = mesTempCpu
+        }
+        viewModel.tempCpu2.observe(this) {
+            val mesTempCpu = String.format("CPU: %s", it)
+            binding.tvTempCpu2.text = mesTempCpu
+        }
+        viewModel.tempCpu3.observe(this) {
+            val mesTempCpu = String.format("CPU: %s", it)
+            binding.tvTempCpu3.text = mesTempCpu
+        }
+        viewModel.tempCpu4.observe(this) {
+            val mesTempCpu = String.format("CPU: %s", it)
+            binding.tvTempCpu4.text = mesTempCpu
+        }
+        viewModel.tempCpu5.observe(this) {
+            val mesTempCpu = String.format("CPU: %s", it)
+            binding.tvTempCpu5.text = mesTempCpu
+        }
+        viewModel.tempCpu6.observe(this) {
+            val mesTempCpu = String.format("CPU: %s", it)
+            binding.tvTempCpu6.text = mesTempCpu
+        }
+        viewModel.tempCpu7.observe(this) {
+            val mesTempCpu = String.format("CPU: %s", it)
+            binding.tvTempCpu7.text = mesTempCpu
+        }
+        viewModel.tempCpu8.observe(this) {
+            val mesTempCpu = String.format("CPU: %s", it)
+            binding.tvTempCpu8.text = mesTempCpu
+        }
+        viewModel.tempCpu9.observe(this) {
+            val mesTempCpu = String.format("CPU: %s", it)
+            binding.tvTempCpu9.text = mesTempCpu
+        }
+        viewModel.tempCpu10.observe(this) {
+            val mesTempCpu = String.format("CPU: %s", it)
+            binding.tvTempCpu10.text = mesTempCpu
+        }
+        viewModel.tempCpu11.observe(this) {
+            val mesTempCpu = String.format("CPU: %s", it)
+            binding.tvTempCpu11.text = mesTempCpu
+        }
+        viewModel.tempCpu12.observe(this) {
+            val mesTempCpu = String.format("CPU: %s", it)
+            binding.tvTempCpu12.text = mesTempCpu
+        }
+        viewModel.tempCpu13.observe(this) {
+            val mesTempCpu = String.format("CPU: %s", it)
+            binding.tvTempCpu13.text = mesTempCpu
+        }
+        viewModel.tempCpu14.observe(this) {
+            val mesTempCpu = String.format("CPU: %s", it)
+            binding.tvTempCpu14.text = mesTempCpu
+        }
+        viewModel.tempCpu15.observe(this) {
+            val mesTempCpu = String.format("CPU: %s", it)
+            binding.tvTempCpu15.text = mesTempCpu
+        }
+        viewModel.tempCpu16.observe(this) {
+            val mesTempCpu = String.format("CPU: %s", it)
+            binding.tvTempCpu16.text = mesTempCpu
+        }
+        viewModel.tempCpu17.observe(this) {
+            val mesTempCpu = String.format("CPU: %s", it)
+            binding.tvTempCpu17.text = mesTempCpu
+        }
+        viewModel.tempCpu18.observe(this) {
+            val mesTempCpu = String.format("CPU: %s", it)
+            binding.tvTempCpu18.text = mesTempCpu
+        }
+        viewModel.tempCpu19.observe(this) {
+            val mesTempCpu = String.format("CPU: %s", it)
+            binding.tvTempCpu19.text = mesTempCpu
         }
         viewModel.message.observe(this) {
             showToast(it)
@@ -61,7 +134,7 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
         binding.butClearDb.setOnClickListener {
             viewModel.clearDatabase()
         }
-        binding.butSendFile.setOnClickListener {
+        binding.butSaveFile.setOnClickListener {
             viewModel.saveCsv()
         }
         binding.butExitApp.setOnClickListener {
