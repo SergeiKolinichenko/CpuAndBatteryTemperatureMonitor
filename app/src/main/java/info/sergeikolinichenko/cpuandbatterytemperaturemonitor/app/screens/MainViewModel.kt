@@ -128,7 +128,7 @@ class MainViewModel(
     private fun getTemperatures() {
         viewModelScope.launch {
             while (cycleWriteData) {
-                val array = getTempsCpu()
+                val array = getTempCpu()
                 Log.d("MyLog", "array.toString() ${array}")
                 val timeStamp = System.currentTimeMillis()
                 val tempBat = getTempBat()
@@ -202,112 +202,66 @@ class MainViewModel(
         return "BAT $tempBat"
     }
 
-    private fun getTempsCpu(): List<String> {
-        val listAddresses = arrayOf(
-            "/sys/devices/system/cpu/cpu0/cpufreq/cpu_temp",
-            "/sys/devices/system/cpu/cpu0/cpufreq/FakeShmoo_cpu_temp",
-            "/sys/class/thermal/thermal_zone1/temp",
-            "/sys/class/i2c-adapter/i2c-4/4-004c/temperature",
-            "/sys/devices/platform/tegra-i2c.3/i2c-4/4-004c/temperature",
-            "/sys/devices/platform/omap/omap_temp_sensor.0/temperature",
-            "/sys/devices/platform/tegra_tmon/temp1_input",
-            "/sys/kernel/debug/tegra_thermal/temp_tj",
-            "/sys/devices/platform/s5p-tmu/temperature",
-            "/sys/class/thermal/thermal_zone0/temp",
-            "/sys/devices/virtual/thermal/thermal_zone0/temp",
-            "/sys/class/hwmon/hwmon0/device/temp1_input",
-            "/sys/devices/virtual/thermal/thermal_zone1/temp",
-            "/sys/devices/platform/s5p-tmu/curr_temp",
-            "/sys/class/thermal/thermal_zone17/temp",
-            "/sys/class/thermal/thermal_zone18/temp",
-            "/sys/class/thermal/thermal_zone19/temp",
-            "/sys/class/thermal/thermal_zone20/temp",
-            "/sys/class/thermal/thermal_zone21/temp",
-            "/sys/class/thermal/thermal_zone22/temp"
-        )
-        val tempCpu = mutableListOf<String>()
-        var reader: BufferedReader? = null
-        for (item in listAddresses.indices) {
-            try {
-                reader =
-                    BufferedReader(FileReader(listAddresses[item]))
-                val line = reader.readLine().toFloat()
-                val result = if (line > 10000) line / 1000
-                else if (line > 1000) line / 100
-                else if (line > 100) line / 10
-                else line
-                if (result > 0) {
-                    tempCpu.add(item, result.toString())
-                } else {
-                    tempCpu.add(item, "not found")
-                }
-
-            } catch (e: Exception) {
-                e.printStackTrace()
-                tempCpu.add(item, "not found")
-            } finally {
-                reader?.close()
-            }
-        }
-        return tempCpu
-    }
-
     private fun getTempCpu(): List<String> {
         val tempCpu = mutableListOf<String>()
         var temp: String?
         var type: String?
-        var count = 0
-        var iteration = 0
-        do {
-            temp = getTemp(iteration)
-            type = getType(iteration)
-            if (temp != null && type != null && temp.toFloat() > 0) {
-                val result = "$type $temp"
-                tempCpu.add(count, result)
-                count++
-                iteration++
-            } else {
-                iteration++
+        for (count in 0..19) {
+            temp = getTemp(count)
+            type = getType(count)
+            if (temp == null) {
+                temp = "no temp"
             }
-        } while (count < MAX_COUNT_TEMP_REGISTERS)
+            if (type == null) {
+                type = "no type"
+            }
+            val result = "$type $temp"
+            Log.d("MyLog", "$count")
+            tempCpu.add(count, result)
 
+        }
         return tempCpu
     }
 
     private fun getTemp(step: Int): String? {
-        val process: Process = Runtime.getRuntime().exec(
-            "cat sys/class/thermal/thermal_zone$step/temp"
-        )
-        val reader =
-            BufferedReader(InputStreamReader(process.inputStream))
-        return try {
-            process.waitFor()
-            val line = reader.readLine().toFloat() / 1000.0f
-            line.toString()
+        var result: String? = null
+        var bufferedReader: BufferedReader? = null
+        try {
+            bufferedReader =
+                BufferedReader(FileReader("/sys/class/thermal/thermal_zone$step/temp"))
+
+            val line = bufferedReader.readLine().toFloat()
+
+            val r = if (line > 10000) line / 1000
+            else if (line > 1000) line / 100
+            else if (line > 100) line / 10
+            else line
+
+            result = if (r > 0) {
+                r.toString()
+            } else {
+                null
+            }
         } catch (e: Exception) {
             e.printStackTrace()
-            null
         } finally {
-            reader.close()
-            process.destroy()
+            bufferedReader?.close()
         }
+        return result
     }
 
     private fun getType(step: Int): String? {
-        val process: Process = Runtime.getRuntime().exec(
-            "cat sys/class/thermal/thermal_zone$step/type"
-        )
-        val reader =
-            BufferedReader(InputStreamReader(process.inputStream))
+        var bufferedReader: BufferedReader? = null
+
         return try {
-            process.waitFor()
-            reader.readLine()
+            bufferedReader =
+                BufferedReader(FileReader("/sys/class/thermal/thermal_zone$step/type"))
+            bufferedReader.readLine()
         } catch (e: Exception) {
             e.printStackTrace()
             null
         } finally {
-            reader.close()
-            process.destroy()
+            bufferedReader?.close()
         }
     }
 
@@ -317,7 +271,7 @@ class MainViewModel(
             _temps = getAllTemps.invoke()
             kotlin.runCatching {
                 val filePath = getFilePath()
-                val csvFail = File( filePath,"temperatures.csv")
+                val csvFail = File(filePath, "temperatures.csv")
                 if (!csvFail.exists()) {
                     csvFail.createNewFile()
                 } else {
@@ -341,8 +295,9 @@ class MainViewModel(
     }
 
     private fun getFilePath(): File {
-        val filePath = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q){
-            val path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+        val filePath = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val path =
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
             File(path.absolutePath + "/" + "CSV_FILE")
         } else {
             val path = Environment.getExternalStorageDirectory()
@@ -408,8 +363,8 @@ class MainViewModel(
         }
     }
 
-        companion object {
-            private const val INTERVAL = 1000L
-            private const val MAX_COUNT_TEMP_REGISTERS = 20
-        }
+    companion object {
+        private const val INTERVAL = 1000L
+        private const val MAX_COUNT_TEMP_REGISTERS = 20
     }
+}
