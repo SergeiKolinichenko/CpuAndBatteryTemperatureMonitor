@@ -2,6 +2,7 @@ package info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.screens
 
 import android.content.Intent
 import android.os.BatteryManager
+import android.os.Build
 import android.os.Environment
 import android.util.Log
 import androidx.lifecycle.LiveData
@@ -217,14 +218,14 @@ class MainViewModel(
             "/sys/class/hwmon/hwmon0/device/temp1_input",
             "/sys/devices/virtual/thermal/thermal_zone1/temp",
             "/sys/devices/platform/s5p-tmu/curr_temp",
-            "sys/class/thermal/thermal_zone17/temp",
-            "sys/class/thermal/thermal_zone18/temp",
-            "sys/class/thermal/thermal_zone19/temp",
-            "sys/class/thermal/thermal_zone20/temp",
-            "sys/class/thermal/thermal_zone21/temp",
-            "sys/class/thermal/thermal_zone22/temp"
+            "/sys/class/thermal/thermal_zone17/temp",
+            "/sys/class/thermal/thermal_zone18/temp",
+            "/sys/class/thermal/thermal_zone19/temp",
+            "/sys/class/thermal/thermal_zone20/temp",
+            "/sys/class/thermal/thermal_zone21/temp",
+            "/sys/class/thermal/thermal_zone22/temp"
         )
-        val tempCpu  = mutableListOf<String>()
+        val tempCpu = mutableListOf<String>()
         var reader: BufferedReader? = null
         for (item in listAddresses.indices) {
             try {
@@ -241,7 +242,7 @@ class MainViewModel(
                     tempCpu.add(item, "not found")
                 }
 
-            }catch (e:Exception) {
+            } catch (e: Exception) {
                 e.printStackTrace()
                 tempCpu.add(item, "not found")
             } finally {
@@ -252,7 +253,7 @@ class MainViewModel(
     }
 
     private fun getTempCpu(): List<String> {
-        val tempCpu  = mutableListOf<String>()
+        val tempCpu = mutableListOf<String>()
         var temp: String?
         var type: String?
         var count = 0
@@ -283,11 +284,10 @@ class MainViewModel(
             process.waitFor()
             val line = reader.readLine().toFloat() / 1000.0f
             line.toString()
-        } catch (e: Exception){
+        } catch (e: Exception) {
             e.printStackTrace()
             null
-        }
-        finally {
+        } finally {
             reader.close()
             process.destroy()
         }
@@ -302,11 +302,10 @@ class MainViewModel(
         return try {
             process.waitFor()
             reader.readLine()
-        } catch (e: Exception){
+        } catch (e: Exception) {
             e.printStackTrace()
             null
-        }
-        finally {
+        } finally {
             reader.close()
             process.destroy()
         }
@@ -317,12 +316,8 @@ class MainViewModel(
         viewModelScope.launch {
             _temps = getAllTemps.invoke()
             kotlin.runCatching {
-                val csvFail = File(
-                    Environment.getExternalStoragePublicDirectory(
-                        Environment.DIRECTORY_DOWNLOADS
-                    ), "file.csv"
-                )
-
+                val filePath = getFilePath()
+                val csvFail = File( filePath,"temperatures.csv")
                 if (!csvFail.exists()) {
                     csvFail.createNewFile()
                 } else {
@@ -332,70 +327,89 @@ class MainViewModel(
                 val fileOutputStream = FileOutputStream(csvFail)
                 val outputStreamWriter = OutputStreamWriter(fileOutputStream)
                 try {
-//                    outputStreamWriter.append("Date and Time, CPU, Battery\n")
-                    for (item in temps.indices) {
-                        val dateTime = temps[item].timeStamp.getFullDate()
-                        val tempCpu0 = temps[item].tempCpu0
-                        val tempCpu1 = temps[item].tempCpu1
-                        val tempCpu2 = temps[item].tempCpu2
-                        val tempCpu3 = temps[item].tempCpu3
-                        val tempCpu4 = temps[item].tempCpu4
-                        val tempCpu5 = temps[item].tempCpu5
-                        val tempCpu6 = temps[item].tempCpu6
-                        val tempCpu7 = temps[item].tempCpu7
-                        val tempCpu8 = temps[item].tempCpu8
-                        val tempCpu9 = temps[item].tempCpu9
-                        val tempCpu10 = temps[item].tempCpu10
-                        val tempCpu11 = temps[item].tempCpu11
-                        val tempCpu12 = temps[item].tempCpu12
-                        val tempCpu13 = temps[item].tempCpu13
-                        val tempCpu14 = temps[item].tempCpu14
-                        val tempCpu15 = temps[item].tempCpu15
-                        val tempCpu16 = temps[item].tempCpu16
-                        val tempCpu17 = temps[item].tempCpu17
-                        val tempCpu18 = temps[item].tempCpu18
-                        val tempCpu19 = temps[item].tempCpu19
-                        val tempBat = temps[item].tempBat
-                        outputStreamWriter.append(
-                            "$dateTime," +
-                                    " $tempCpu0," +
-                                    " $tempCpu1," +
-                                    " $tempCpu2," +
-                                    " $tempCpu3," +
-                                    " $tempCpu4," +
-                                    " $tempCpu5," +
-                                    " $tempCpu6," +
-                                    " $tempCpu7, " +
-                                    "$tempCpu8," +
-                                    " $tempCpu9," +
-                                    " $tempCpu10," +
-                                    " $tempCpu11," +
-                                    " $tempCpu12," +
-                                    " $tempCpu13," +
-                                    " $tempCpu14," +
-                                    " $tempCpu15," +
-                                    " $tempCpu16, " +
-                                    "$tempCpu17," +
-                                    " $tempCpu18, " +
-                                    "$tempCpu19," +
-                                    " $tempBat\n"
-                        )
-                    }
+                    outputStreamWrite(outputStreamWriter, temps)
+                    _message.value = "The csv file is saved in CSV_FILE directory"
                 } catch (e: Exception) {
                     _message.value = "Writing csv file failed"
-                }
-                finally {
+                } finally {
                     outputStreamWriter.close()
                     fileOutputStream.close()
                     cycleWriteData = true
-                    _message.value = "The csv file is saved in the Download folder"
                 }
             }
         }
     }
 
-    companion object {
-        private const val INTERVAL = 1000L
-        private const val MAX_COUNT_TEMP_REGISTERS = 20
+    private fun getFilePath(): File {
+        val filePath = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q){
+            val path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+            File(path.absolutePath + "/" + "CSV_FILE")
+        } else {
+            val path = Environment.getExternalStorageDirectory()
+            File(path.absolutePath + "/" + "CSV_FILE")
+        }
+        if (!filePath.exists()) {
+            filePath.mkdir()
+        }
+        return filePath
     }
-}
+
+    private fun outputStreamWrite(
+        outputStreamWriter: OutputStreamWriter,
+        temps: List<Temps>
+    ) {
+        for (item in temps.indices) {
+            val dateTime = temps[item].timeStamp.getFullDate()
+            val tempCpu0 = temps[item].tempCpu0
+            val tempCpu1 = temps[item].tempCpu1
+            val tempCpu2 = temps[item].tempCpu2
+            val tempCpu3 = temps[item].tempCpu3
+            val tempCpu4 = temps[item].tempCpu4
+            val tempCpu5 = temps[item].tempCpu5
+            val tempCpu6 = temps[item].tempCpu6
+            val tempCpu7 = temps[item].tempCpu7
+            val tempCpu8 = temps[item].tempCpu8
+            val tempCpu9 = temps[item].tempCpu9
+            val tempCpu10 = temps[item].tempCpu10
+            val tempCpu11 = temps[item].tempCpu11
+            val tempCpu12 = temps[item].tempCpu12
+            val tempCpu13 = temps[item].tempCpu13
+            val tempCpu14 = temps[item].tempCpu14
+            val tempCpu15 = temps[item].tempCpu15
+            val tempCpu16 = temps[item].tempCpu16
+            val tempCpu17 = temps[item].tempCpu17
+            val tempCpu18 = temps[item].tempCpu18
+            val tempCpu19 = temps[item].tempCpu19
+            val tempBat = temps[item].tempBat
+            outputStreamWriter.append(
+                "$dateTime," +
+                        " $tempCpu0," +
+                        " $tempCpu1," +
+                        " $tempCpu2," +
+                        " $tempCpu3," +
+                        " $tempCpu4," +
+                        " $tempCpu5," +
+                        " $tempCpu6," +
+                        " $tempCpu7, " +
+                        "$tempCpu8," +
+                        " $tempCpu9," +
+                        " $tempCpu10," +
+                        " $tempCpu11," +
+                        " $tempCpu12," +
+                        " $tempCpu13," +
+                        " $tempCpu14," +
+                        " $tempCpu15," +
+                        " $tempCpu16, " +
+                        "$tempCpu17," +
+                        " $tempCpu18, " +
+                        "$tempCpu19," +
+                        " $tempBat\n"
+            )
+        }
+    }
+
+        companion object {
+            private const val INTERVAL = 1000L
+            private const val MAX_COUNT_TEMP_REGISTERS = 20
+        }
+    }
