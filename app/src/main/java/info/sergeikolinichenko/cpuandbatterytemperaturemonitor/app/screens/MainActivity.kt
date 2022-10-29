@@ -15,7 +15,6 @@ import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.ForegroundSer
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.utils.Utils.COMMAND_ID
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.utils.Utils.COMMAND_START
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.utils.Utils.COMMAND_STOP
-import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.utils.Utils.getTime
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
@@ -113,18 +112,6 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
         viewModel.tempCpu16.observe(this) {
             val mesTempCpu = String.format("CPU: %s", it)
             binding.tvTempCpu16.text = mesTempCpu
-        }
-        viewModel.tempCpu17.observe(this) {
-            val mesTempCpu = String.format("CPU: %s", it)
-            binding.tvTempCpu17.text = mesTempCpu
-        }
-        viewModel.tempCpu18.observe(this) {
-            val mesTempCpu = String.format("CPU: %s", it)
-            binding.tvTempCpu18.text = mesTempCpu
-        }
-        viewModel.tempCpu19.observe(this) {
-            val mesTempCpu = String.format("CPU: %s", it)
-            binding.tvTempCpu19.text = mesTempCpu
         }
         viewModel.message.observe(this) {
             showToast(it)

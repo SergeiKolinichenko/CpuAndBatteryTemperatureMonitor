@@ -1,6 +1,7 @@
 package info.sergeikolinichenko.cpuandbatterytemperaturemonitor.data.database
 
 import android.app.Application
+import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
@@ -8,12 +9,16 @@ import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.data.dbmodels.Tem
 
 /** Created by Sergei Kolinichenko on 25.10.2022 at 08:05 (GMT+3) **/
 
-@Database(entities = [TempsDbModels::class], version = 1, exportSchema = false)
-abstract class AppDatabase: RoomDatabase() {
+@Database(
+    entities = [TempsDbModels::class],
+    version = 1,
+    exportSchema = true
+)
+abstract class AppDatabase : RoomDatabase() {
 
-    abstract fun tempsDao():TempsDao
+    abstract fun tempsDao(): TempsDao
 
-    companion object{
+    companion object {
 
         private var INSTANCE: AppDatabase? = null
         private val LOCK = Any()

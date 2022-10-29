@@ -25,9 +25,6 @@ class TempsMapper {
         tempCpu14 = temps.tempCpu14,
         tempCpu15 = temps.tempCpu15,
         tempCpu16 = temps.tempCpu16,
-        tempCpu17 = temps.tempCpu17,
-        tempCpu18 = temps.tempCpu18,
-        tempCpu19 = temps.tempCpu19,
         tempBat = temps.tempBat
     )
 
@@ -50,9 +47,6 @@ class TempsMapper {
         tempCpu14 = tempsDbModels.tempCpu14,
         tempCpu15 = tempsDbModels.tempCpu15,
         tempCpu16 = tempsDbModels.tempCpu16,
-        tempCpu17 = tempsDbModels.tempCpu17,
-        tempCpu18 = tempsDbModels.tempCpu18,
-        tempCpu19 = tempsDbModels.tempCpu19,
         tempBat = tempsDbModels.tempBat
     )
 

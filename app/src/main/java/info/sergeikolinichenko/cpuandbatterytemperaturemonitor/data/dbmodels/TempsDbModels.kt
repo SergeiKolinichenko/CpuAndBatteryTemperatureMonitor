@@ -26,8 +26,5 @@ data class TempsDbModels(
     val tempCpu14: String,
     val tempCpu15: String,
     val tempCpu16: String,
-    val tempCpu17: String,
-    val tempCpu18: String,
-    val tempCpu19: String,
     val tempBat: String
 )

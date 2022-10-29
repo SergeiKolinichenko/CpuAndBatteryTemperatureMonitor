@@ -4,11 +4,11 @@ import android.content.Intent
 import android.os.BatteryManager
 import android.os.Build
 import android.os.Environment
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.ForegroundService.Companion.NUMBER_OF_DATA_READ_CYCLES
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.utils.Utils.getFullDate
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.domain.models.Temps
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.domain.usecases.AddTemps
@@ -99,18 +99,6 @@ class MainViewModel(
     val tempCpu16: LiveData<String>
         get() = _tempCpu16
 
-    private var _tempCpu17 = MutableLiveData<String>()
-    val tempCpu17: LiveData<String>
-        get() = _tempCpu17
-
-    private var _tempCpu18 = MutableLiveData<String>()
-    val tempCpu18: LiveData<String>
-        get() = _tempCpu18
-
-    private var _tempCpu19 = MutableLiveData<String>()
-    val tempCpu19: LiveData<String>
-        get() = _tempCpu19
-
     private var _tempBat = MutableLiveData<String>()
     val tempBat: LiveData<String>
         get() = _tempBat
@@ -129,11 +117,10 @@ class MainViewModel(
         viewModelScope.launch {
             while (cycleWriteData) {
                 val array = getTempCpu()
-                Log.d("MyLog", "array.toString() ${array}")
                 val timeStamp = System.currentTimeMillis()
                 val tempBat = getTempBat()
 
-                _tempBat.value = tempBat
+                _tempBat.value = "Battery $tempBat"
 
                 _tempCpu0.value = array[0]
                 _tempCpu1.value = array[1]
@@ -152,9 +139,9 @@ class MainViewModel(
                 _tempCpu14.value = array[14]
                 _tempCpu15.value = array[15]
                 _tempCpu16.value = array[16]
-                _tempCpu17.value = array[17]
-                _tempCpu18.value = array[18]
-                _tempCpu19.value = array[19]
+//                _tempCpu17.value = "${array[34]}:${array[35]}"
+//                _tempCpu18.value = "${array[36]}:${array[37]}"
+//                _tempCpu19.value = "${array[38]}:${array[39]}"
 
                 val temps = Temps(
                     timeStamp,
@@ -175,9 +162,6 @@ class MainViewModel(
                     array[14],
                     array[15],
                     array[16],
-                    array[17],
-                    array[18],
-                    array[19],
                     tempBat
                 )
                 addTemps.invoke(temps)
@@ -195,18 +179,17 @@ class MainViewModel(
 
     private fun getTempBat(): String {
         val intent = registerReceiver
-        val tempBat = (intent?.getIntExtra(
+        return (intent?.getIntExtra(
             BatteryManager.EXTRA_TEMPERATURE,
             0
         ))?.div(10).toString()
-        return "BAT $tempBat"
     }
 
     private fun getTempCpu(): List<String> {
         val tempCpu = mutableListOf<String>()
         var temp: String?
         var type: String?
-        for (count in 0..19) {
+        for (count in 0 until NUMBER_OF_DATA_READ_CYCLES) {
             temp = getTemp(count)
             type = getType(count)
             if (temp == null) {
@@ -216,7 +199,6 @@ class MainViewModel(
                 type = "no type"
             }
             val result = "$type $temp"
-            Log.d("MyLog", "$count")
             tempCpu.add(count, result)
 
         }
@@ -332,10 +314,7 @@ class MainViewModel(
             val tempCpu14 = temps[item].tempCpu14
             val tempCpu15 = temps[item].tempCpu15
             val tempCpu16 = temps[item].tempCpu16
-            val tempCpu17 = temps[item].tempCpu17
-            val tempCpu18 = temps[item].tempCpu18
-            val tempCpu19 = temps[item].tempCpu19
-            val tempBat = temps[item].tempBat
+            val tempBat = "Battery ${temps[item].tempBat}"
             outputStreamWriter.append(
                 "$dateTime," +
                         " $tempCpu0," +
@@ -355,9 +334,6 @@ class MainViewModel(
                         " $tempCpu14," +
                         " $tempCpu15," +
                         " $tempCpu16, " +
-                        "$tempCpu17," +
-                        " $tempCpu18, " +
-                        "$tempCpu19," +
                         " $tempBat\n"
             )
         }
@@ -365,6 +341,5 @@ class MainViewModel(
 
     companion object {
         private const val INTERVAL = 1000L
-        private const val MAX_COUNT_TEMP_REGISTERS = 20
     }
 }

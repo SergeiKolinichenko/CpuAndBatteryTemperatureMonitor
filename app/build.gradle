@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    compileSdk 32
+    compileSdk 33
 
     defaultConfig {
         applicationId "info.sergeikolinichenko.cpuandbatterytemperaturemonitor"
@@ -15,7 +15,19 @@ android {
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+//        kapt {
+//            arguments {
+//                arg("room.schemaLocation", "$projectDir/schemas")
+//            }
+//        }
+
     }
+//    sourceSets {
+//        getByName("androidTest") {
+//            assets.srcDirs(files(projectDir, "schemas"))
+//        }
+//    }
 
     buildTypes {
         release {
@@ -60,6 +72,10 @@ dependencies {
     kapt "androidx.room:room-compiler:$room_version"
     // optional - Kotlin Extensions and Coroutines support for Room
     implementation "androidx.room:room-ktx:$room_version"
+    // optional - Test helpers
+    testImplementation("androidx.room:room-testing:$room_version")
+    // optional - Paging 3 Integration
+    androidTestImplementation "androidx.room:room-testing:$room_version"
 
 
 }
