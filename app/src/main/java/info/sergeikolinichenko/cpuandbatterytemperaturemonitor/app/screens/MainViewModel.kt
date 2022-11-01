@@ -8,12 +8,14 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.R
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.ForegroundService.Companion.NUMBER_OF_DATA_READ_CYCLES
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.utils.Utils.getFullDate
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.domain.models.Temps
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.domain.usecases.AddTemps
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.domain.usecases.ClearDb
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.domain.usecases.GetAllTemps
+import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.domain.usecases.GetAllTempsLiveData
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.*
@@ -24,144 +26,38 @@ class MainViewModel(
     private val registerReceiver: Intent?,
     private val clearDb: ClearDb,
     private val addTemps: AddTemps,
-    private val getAllTemps: GetAllTemps
+    private val getAllTemps: GetAllTemps,
+    getAllTempsLiveData: GetAllTempsLiveData
 ) : ViewModel() {
 
     private var _temps: List<Temps>? = null
     private val temps: List<Temps>
         get() = _temps ?: throw RuntimeException("List<Temps> equal null")
 
-    private var _tempCpu0 = MutableLiveData<String>()
-    val tempCpu0: LiveData<String>
-        get() = _tempCpu0
+    val tempsList = getAllTempsLiveData.invoke()
 
-    private var _tempCpu1 = MutableLiveData<String>()
-    val tempCpu1: LiveData<String>
-        get() = _tempCpu1
-
-    private var _tempCpu2 = MutableLiveData<String>()
-    val tempCpu2: LiveData<String>
-        get() = _tempCpu2
-
-    private var _tempCpu3 = MutableLiveData<String>()
-    val tempCpu3: LiveData<String>
-        get() = _tempCpu3
-
-    private var _tempCpu4 = MutableLiveData<String>()
-    val tempCpu4: LiveData<String>
-        get() = _tempCpu4
-
-    private var _tempCpu5 = MutableLiveData<String>()
-    val tempCpu5: LiveData<String>
-        get() = _tempCpu5
-
-    private var _tempCpu6 = MutableLiveData<String>()
-    val tempCpu6: LiveData<String>
-        get() = _tempCpu6
-
-    private var _tempCpu7 = MutableLiveData<String>()
-    val tempCpu7: LiveData<String>
-        get() = _tempCpu7
-
-    private var _tempCpu8 = MutableLiveData<String>()
-    val tempCpu8: LiveData<String>
-        get() = _tempCpu8
-
-    private var _tempCpu9 = MutableLiveData<String>()
-    val tempCpu9: LiveData<String>
-        get() = _tempCpu9
-
-    private var _tempCpu10 = MutableLiveData<String>()
-    val tempCpu10: LiveData<String>
-        get() = _tempCpu10
-
-    private var _tempCpu11 = MutableLiveData<String>()
-    val tempCpu11: LiveData<String>
-        get() = _tempCpu11
-
-    private var _tempCpu12 = MutableLiveData<String>()
-    val tempCpu12: LiveData<String>
-        get() = _tempCpu12
-
-    private var _tempCpu13 = MutableLiveData<String>()
-    val tempCpu13: LiveData<String>
-        get() = _tempCpu13
-
-    private var _tempCpu14 = MutableLiveData<String>()
-    val tempCpu14: LiveData<String>
-        get() = _tempCpu14
-
-    private var _tempCpu15 = MutableLiveData<String>()
-    val tempCpu15: LiveData<String>
-        get() = _tempCpu15
-
-    private var _tempCpu16 = MutableLiveData<String>()
-    val tempCpu16: LiveData<String>
-        get() = _tempCpu16
-
-    private var _tempBat = MutableLiveData<String>()
-    val tempBat: LiveData<String>
-        get() = _tempBat
-
-    private var _message = MutableLiveData<String>()
-    val message: LiveData<String>
-        get() = _message
+    private var _showMessage = MutableLiveData<Int>()
+    val showMessage: LiveData<Int>
+        get() = _showMessage
 
     private var cycleWriteData: Boolean = true
+    private val contStringDatabaseCleared = R.string.database_cleared
+    private val contStringCsvFileSaved = R.string.csv_file_saved
+    private val contStringCsvFileSaveFiled = R.string.csv_file_save_filed
 
-    init {
+        init {
         getTemperatures()
     }
 
     private fun getTemperatures() {
         viewModelScope.launch {
             while (cycleWriteData) {
-                val array = getTempCpu()
+                val tempCpu = getTempCpu()
                 val timeStamp = System.currentTimeMillis()
                 val tempBat = getTempBat()
-
-                _tempBat.value = "Battery $tempBat"
-
-                _tempCpu0.value = array[0]
-                _tempCpu1.value = array[1]
-                _tempCpu2.value = array[2]
-                _tempCpu3.value = array[3]
-                _tempCpu4.value = array[4]
-                _tempCpu5.value = array[5]
-                _tempCpu6.value = array[6]
-                _tempCpu7.value = array[7]
-                _tempCpu8.value = array[8]
-                _tempCpu9.value = array[9]
-                _tempCpu10.value = array[10]
-                _tempCpu11.value = array[11]
-                _tempCpu12.value = array[12]
-                _tempCpu13.value = array[13]
-                _tempCpu14.value = array[14]
-                _tempCpu15.value = array[15]
-                _tempCpu16.value = array[16]
-//                _tempCpu17.value = "${array[34]}:${array[35]}"
-//                _tempCpu18.value = "${array[36]}:${array[37]}"
-//                _tempCpu19.value = "${array[38]}:${array[39]}"
-
                 val temps = Temps(
                     timeStamp,
-                    array[0],
-                    array[1],
-                    array[2],
-                    array[3],
-                    array[4],
-                    array[5],
-                    array[6],
-                    array[7],
-                    array[8],
-                    array[9],
-                    array[10],
-                    array[11],
-                    array[12],
-                    array[13],
-                    array[14],
-                    array[15],
-                    array[16],
+                    tempCpu,
                     tempBat
                 )
                 addTemps.invoke(temps)
@@ -174,7 +70,7 @@ class MainViewModel(
         viewModelScope.launch {
             clearDb.invoke()
         }
-        _message.value = "Database cleared"
+        _showMessage.value = contStringDatabaseCleared
     }
 
     private fun getTempBat(): String {
@@ -185,24 +81,22 @@ class MainViewModel(
         ))?.div(10).toString()
     }
 
-    private fun getTempCpu(): List<String> {
+    private fun getTempCpu(): String {
         val tempCpu = mutableListOf<String>()
         var temp: String?
         var type: String?
         for (count in 0 until NUMBER_OF_DATA_READ_CYCLES) {
             temp = getTemp(count)
             type = getType(count)
-            if (temp == null) {
-                temp = "no temp"
+            type?.let {
+                temp?.let {
+                    if (temp.toFloat() > 0) {
+                        tempCpu.add("$type $temp")
+                    }
+                }
             }
-            if (type == null) {
-                type = "no type"
-            }
-            val result = "$type $temp"
-            tempCpu.add(count, result)
-
         }
-        return tempCpu
+        return tempCpu.joinToString(SEPARATOR)
     }
 
     private fun getTemp(step: Int): String? {
@@ -264,9 +158,9 @@ class MainViewModel(
                 val outputStreamWriter = OutputStreamWriter(fileOutputStream)
                 try {
                     outputStreamWrite(outputStreamWriter, temps)
-                    _message.value = "The csv file is saved in CSV_FILE directory"
+                    _showMessage.value = contStringCsvFileSaved
                 } catch (e: Exception) {
-                    _message.value = "Writing csv file failed"
+                    _showMessage.value = contStringCsvFileSaveFiled
                 } finally {
                     outputStreamWriter.close()
                     fileOutputStream.close()
@@ -297,43 +191,11 @@ class MainViewModel(
     ) {
         for (item in temps.indices) {
             val dateTime = temps[item].timeStamp.getFullDate()
-            val tempCpu0 = temps[item].tempCpu0
-            val tempCpu1 = temps[item].tempCpu1
-            val tempCpu2 = temps[item].tempCpu2
-            val tempCpu3 = temps[item].tempCpu3
-            val tempCpu4 = temps[item].tempCpu4
-            val tempCpu5 = temps[item].tempCpu5
-            val tempCpu6 = temps[item].tempCpu6
-            val tempCpu7 = temps[item].tempCpu7
-            val tempCpu8 = temps[item].tempCpu8
-            val tempCpu9 = temps[item].tempCpu9
-            val tempCpu10 = temps[item].tempCpu10
-            val tempCpu11 = temps[item].tempCpu11
-            val tempCpu12 = temps[item].tempCpu12
-            val tempCpu13 = temps[item].tempCpu13
-            val tempCpu14 = temps[item].tempCpu14
-            val tempCpu15 = temps[item].tempCpu15
-            val tempCpu16 = temps[item].tempCpu16
+            val tempCpu = temps[item].tempCpu
             val tempBat = "Battery ${temps[item].tempBat}"
             outputStreamWriter.append(
                 "$dateTime," +
-                        " $tempCpu0," +
-                        " $tempCpu1," +
-                        " $tempCpu2," +
-                        " $tempCpu3," +
-                        " $tempCpu4," +
-                        " $tempCpu5," +
-                        " $tempCpu6," +
-                        " $tempCpu7, " +
-                        "$tempCpu8," +
-                        " $tempCpu9," +
-                        " $tempCpu10," +
-                        " $tempCpu11," +
-                        " $tempCpu12," +
-                        " $tempCpu13," +
-                        " $tempCpu14," +
-                        " $tempCpu15," +
-                        " $tempCpu16, " +
+                        " $tempCpu," +
                         " $tempBat\n"
             )
         }
@@ -341,5 +203,6 @@ class MainViewModel(
 
     companion object {
         private const val INTERVAL = 1000L
+        const val SEPARATOR = ", "
     }
 }

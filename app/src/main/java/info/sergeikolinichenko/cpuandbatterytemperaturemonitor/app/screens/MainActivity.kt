@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -11,7 +12,9 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModelProvider
+import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.R
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.ForegroundService
+import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.screens.MainViewModel.Companion.SEPARATOR
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.utils.Utils.COMMAND_ID
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.utils.Utils.COMMAND_START
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.utils.Utils.COMMAND_STOP
@@ -41,80 +44,19 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
         checkWritePermission()
 
         // Observers
-        viewModel.tempBat.observe(this) {
-            val mesTempBat = String.format("Battery: %s", it)
-            binding.tvTempBattery.text = mesTempBat
+        viewModel.tempsList.observe(this) {
+            val lastIndex = it.lastIndex
+            if (lastIndex >= 0) {
+                binding.tvTempBattery.text = it[lastIndex].tempBat
+                val tempCpu = parseTempCpu(it[lastIndex].tempCpu)
+                binding.tvTempCpu.text = tempCpu
+            } else {
+                binding.tvTempBattery.text = getString(R.string.no_data)
+            }
         }
-        viewModel.tempCpu0.observe(this) {
-            val mesTempCpu = String.format("CPU: %s", it)
-            binding.tvTempCpu0.text = mesTempCpu
-        }
-        viewModel.tempCpu1.observe(this) {
-            val mesTempCpu = String.format("CPU: %s", it)
-            binding.tvTempCpu1.text = mesTempCpu
-        }
-        viewModel.tempCpu2.observe(this) {
-            val mesTempCpu = String.format("CPU: %s", it)
-            binding.tvTempCpu2.text = mesTempCpu
-        }
-        viewModel.tempCpu3.observe(this) {
-            val mesTempCpu = String.format("CPU: %s", it)
-            binding.tvTempCpu3.text = mesTempCpu
-        }
-        viewModel.tempCpu4.observe(this) {
-            val mesTempCpu = String.format("CPU: %s", it)
-            binding.tvTempCpu4.text = mesTempCpu
-        }
-        viewModel.tempCpu5.observe(this) {
-            val mesTempCpu = String.format("CPU: %s", it)
-            binding.tvTempCpu5.text = mesTempCpu
-        }
-        viewModel.tempCpu6.observe(this) {
-            val mesTempCpu = String.format("CPU: %s", it)
-            binding.tvTempCpu6.text = mesTempCpu
-        }
-        viewModel.tempCpu7.observe(this) {
-            val mesTempCpu = String.format("CPU: %s", it)
-            binding.tvTempCpu7.text = mesTempCpu
-        }
-        viewModel.tempCpu8.observe(this) {
-            val mesTempCpu = String.format("CPU: %s", it)
-            binding.tvTempCpu8.text = mesTempCpu
-        }
-        viewModel.tempCpu9.observe(this) {
-            val mesTempCpu = String.format("CPU: %s", it)
-            binding.tvTempCpu9.text = mesTempCpu
-        }
-        viewModel.tempCpu10.observe(this) {
-            val mesTempCpu = String.format("CPU: %s", it)
-            binding.tvTempCpu10.text = mesTempCpu
-        }
-        viewModel.tempCpu11.observe(this) {
-            val mesTempCpu = String.format("CPU: %s", it)
-            binding.tvTempCpu11.text = mesTempCpu
-        }
-        viewModel.tempCpu12.observe(this) {
-            val mesTempCpu = String.format("CPU: %s", it)
-            binding.tvTempCpu12.text = mesTempCpu
-        }
-        viewModel.tempCpu13.observe(this) {
-            val mesTempCpu = String.format("CPU: %s", it)
-            binding.tvTempCpu13.text = mesTempCpu
-        }
-        viewModel.tempCpu14.observe(this) {
-            val mesTempCpu = String.format("CPU: %s", it)
-            binding.tvTempCpu14.text = mesTempCpu
-        }
-        viewModel.tempCpu15.observe(this) {
-            val mesTempCpu = String.format("CPU: %s", it)
-            binding.tvTempCpu15.text = mesTempCpu
-        }
-        viewModel.tempCpu16.observe(this) {
-            val mesTempCpu = String.format("CPU: %s", it)
-            binding.tvTempCpu16.text = mesTempCpu
-        }
-        viewModel.message.observe(this) {
-            showToast(it)
+
+        viewModel.showMessage.observe(this) {
+            showToast(getString(it))
         }
 
         // OnClickListeners
@@ -128,6 +70,16 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
             lifecycle.removeObserver(this)
             finish()
         }
+    }
+
+    private fun parseTempCpu(text: String): String {
+        val list = text.split(SEPARATOR)
+        var string = ""
+        for (i in list) {
+            string += "$i\n"
+        }
+        Log.d("MyLog", string)
+        return string
     }
 
     override fun onDestroy() {

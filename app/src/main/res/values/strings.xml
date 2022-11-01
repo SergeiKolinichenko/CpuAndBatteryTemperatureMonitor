@@ -3,4 +3,9 @@
     <string name="send_file">SAVE FILE</string>
     <string name="clear_db">CLEAR DB</string>
     <string name="exit_app">EXIT APP</string>
+    <string name="no_data">no data</string>
+    <string name="database_cleared">Database cleared</string>
+    <string name="csv_file_saved">The csv file is saved in CSV_FILE directory</string>
+    <string name="csv_file_save_filed">Writing csv file failed</string>
+
 </resources>

@@ -1,5 +1,6 @@
 package info.sergeikolinichenko.cpuandbatterytemperaturemonitor.data.dbmodels
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
@@ -9,22 +10,6 @@ import androidx.room.PrimaryKey
 data class TempsDbModels(
     @PrimaryKey(autoGenerate = false)
     val timeStamp: Long,
-    val tempCpu0: String,
-    val tempCpu1: String,
-    val tempCpu2: String,
-    val tempCpu3: String,
-    val tempCpu4: String,
-    val tempCpu5: String,
-    val tempCpu6: String,
-    val tempCpu7: String,
-    val tempCpu8: String,
-    val tempCpu9: String,
-    val tempCpu10: String,
-    val tempCpu11: String,
-    val tempCpu12: String,
-    val tempCpu13: String,
-    val tempCpu14: String,
-    val tempCpu15: String,
-    val tempCpu16: String,
+    val tempCpu: String,
     val tempBat: String
 )

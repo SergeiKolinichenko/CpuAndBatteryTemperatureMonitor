@@ -14,6 +14,7 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.R
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.screens.MainActivity
+import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.screens.MainViewModel
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.utils.Utils.COMMAND_ID
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.utils.Utils.COMMAND_START
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.utils.Utils.COMMAND_STOP
@@ -93,9 +94,10 @@ class ForegroundService: Service() {
             while (true) {
                 val timeStamp = System.currentTimeMillis()
                 val tempBat = getTempBat()
-                val array = getTempCpu()
+                val tempCpu = getTempCpu()
 
-                val content = "Temperature measurement in progress ${timeStamp.getTime()}"//String.format("CPU: %d BAT: %s", tempCpu.toInt(), tempBat)
+                val content = "Temperature measurement in progress ${timeStamp.getTime()}"
+
                 notificationManager?.notify(
                     NOTIFICATION_ID,
                     getNotification(content)
@@ -103,23 +105,7 @@ class ForegroundService: Service() {
 
                 val temps = Temps(
                     timeStamp,
-                    array[0],
-                    array[1],
-                    array[2],
-                    array[3],
-                    array[4],
-                    array[5],
-                    array[6],
-                    array[7],
-                    array[8],
-                    array[9],
-                    array[10],
-                    array[11],
-                    array[12],
-                    array[13],
-                    array[14],
-                    array[15],
-                    array[16],
+                    tempCpu,
                     tempBat
                 )
                 addTemps.invoke(temps)
@@ -139,25 +125,22 @@ class ForegroundService: Service() {
         return "BAT $tempBat"
     }
 
-    private fun getTempCpu(): List<String> {
+    private fun getTempCpu(): String {
         val tempCpu = mutableListOf<String>()
         var temp: String?
         var type: String?
         for (count in 0 until NUMBER_OF_DATA_READ_CYCLES) {
             temp = getTemp(count)
             type = getType(count)
-            if (temp == null) {
-                temp = "no temp"
+            type?.let {
+                temp?.let {
+                    if (temp.toFloat() > 0) {
+                        tempCpu.add("$type $temp")
+                    }
+                }
             }
-            if (type == null) {
-                type = "no type"
-            }
-            val result = "$type $temp"
-            Log.d("MyLog", "$count")
-            tempCpu.add(count, result)
-
         }
-        return tempCpu
+        return tempCpu.joinToString(MainViewModel.SEPARATOR)
     }
 
     private fun getTemp(step: Int): String? {
@@ -261,6 +244,6 @@ class ForegroundService: Service() {
         private const val CHANNEL_ID = "Channel_ID"
         private const val NOTIFICATION_ID = 777
         private const val INTERVAL = 1000L
-        const val NUMBER_OF_DATA_READ_CYCLES = 17
+        const val NUMBER_OF_DATA_READ_CYCLES = 100
     }
 }

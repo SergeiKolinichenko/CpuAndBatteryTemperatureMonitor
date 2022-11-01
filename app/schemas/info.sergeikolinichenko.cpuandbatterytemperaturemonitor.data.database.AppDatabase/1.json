@@ -1,12 +1,12 @@
 {
   "formatVersion": 1,
   "database": {
-    "version": 2,
-    "identityHash": "cc89aa2466434888e00b5aaeaf74cf83",
+    "version": 1,
+    "identityHash": "be83a604df7fafd2e8f7c4bf520606b9",
     "entities": [
       {
         "tableName": "temperatures",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`timeStamp` INTEGER NOT NULL, `tempCpu` TEXT NOT NULL, `tempBat` TEXT NOT NULL, PRIMARY KEY(`timeStamp`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`timeStamp` INTEGER NOT NULL, `tempCpu` TEXT NOT NULL DEFAULT '', `tempBat` TEXT NOT NULL, PRIMARY KEY(`timeStamp`))",
         "fields": [
           {
             "fieldPath": "timeStamp",
@@ -18,7 +18,8 @@
             "fieldPath": "tempCpu",
             "columnName": "tempCpu",
             "affinity": "TEXT",
-            "notNull": true
+            "notNull": true,
+            "defaultValue": "''"
           },
           {
             "fieldPath": "tempBat",
@@ -40,7 +41,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'cc89aa2466434888e00b5aaeaf74cf83')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'be83a604df7fafd2e8f7c4bf520606b9')"
     ]
   }
 }

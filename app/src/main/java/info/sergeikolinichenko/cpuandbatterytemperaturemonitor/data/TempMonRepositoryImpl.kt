@@ -1,6 +1,8 @@
 package info.sergeikolinichenko.cpuandbatterytemperaturemonitor.data
 
 import android.app.Application
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.Transformations
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.data.database.AppDatabase
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.data.dbmodels.TempsMapper
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.domain.TempMonRepository
@@ -22,15 +24,15 @@ class TempMonRepositoryImpl(application: Application) : TempMonRepository {
     }
 
     override suspend fun getAllTemps(): List<Temps> {
-        return mapper.mapListDbModelToListEntity(dao.getTemperatures())
+        return mapper.mapListDbModelToListEntity(dao.getTemps())
     }
 
-//    override fun getAllTemps(): LiveData<List<Temps>> {
-//        val list: LiveData<List<Temps>> = Transformations.map(
-//            dao.getTemperatures()) {
-//                mapper.mapListDbModelToListEntity(it)
-//            }
-//        return list
-//    }
+    override fun getAllTempsLivedata(): LiveData<List<Temps>> {
+        val listOfTemps: LiveData<List<Temps>> =
+            Transformations.map(dao.getTempsLiveData()) {
+                mapper.mapListDbModelToListEntity(it)
+            }
+        return listOfTemps
+    }
 
 }

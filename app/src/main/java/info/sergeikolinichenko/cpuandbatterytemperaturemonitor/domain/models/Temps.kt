@@ -4,22 +4,6 @@ package info.sergeikolinichenko.cpuandbatterytemperaturemonitor.domain.models
 
 data class Temps(
     val timeStamp: Long,
-    val tempCpu0: String,
-    val tempCpu1: String,
-    val tempCpu2: String,
-    val tempCpu3: String,
-    val tempCpu4: String,
-    val tempCpu5: String,
-    val tempCpu6: String,
-    val tempCpu7: String,
-    val tempCpu8: String,
-    val tempCpu9: String,
-    val tempCpu10: String,
-    val tempCpu11: String,
-    val tempCpu12: String,
-    val tempCpu13: String,
-    val tempCpu14: String,
-    val tempCpu15: String,
-    val tempCpu16: String,
+    val tempCpu: String,
     val tempBat: String
 )

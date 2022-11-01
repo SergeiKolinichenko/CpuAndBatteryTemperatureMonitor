@@ -9,15 +9,20 @@ import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.data.TempMonRepos
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.domain.usecases.AddTemps
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.domain.usecases.ClearDb
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.domain.usecases.GetAllTemps
+import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.domain.usecases.GetAllTempsLiveData
 
 /** Created by Sergei Kolinichenko on 25.10.2022 at 09:04 (GMT+3) **/
 
 class MainViewModelFactory(application: Application) : ViewModelProvider.Factory {
 
     private val repository = TempMonRepositoryImpl(application)
+
     private val clearDb = ClearDb(repository)
+
     private val addTemps = AddTemps(repository)
     private val getAllTemps = GetAllTemps(repository)
+    private val getAllTempsLiveData = GetAllTempsLiveData(repository)
+
     private val registerReceiver = application.registerReceiver(
         null,
         IntentFilter(Intent.ACTION_BATTERY_CHANGED)
@@ -30,7 +35,8 @@ class MainViewModelFactory(application: Application) : ViewModelProvider.Factory
                 registerReceiver,
                 clearDb,
                 addTemps,
-                getAllTemps
+                getAllTemps,
+                getAllTempsLiveData
             ) as T
         } else throw RuntimeException("Unknown view Model class $modelClass")
     }
