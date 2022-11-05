@@ -10,11 +10,9 @@ import android.content.IntentFilter
 import android.os.BatteryManager
 import android.os.Build
 import android.os.IBinder
-import android.util.Log
 import androidx.core.app.NotificationCompat
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.R
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.screens.MainActivity
-import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.screens.MainViewModel
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.utils.Utils.COMMAND_ID
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.utils.Utils.COMMAND_START
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.utils.Utils.COMMAND_STOP
@@ -96,7 +94,7 @@ class ForegroundService: Service() {
                 val tempBat = getTempBat()
                 val tempCpu = getTempCpu()
 
-                val content = "Temperature measurement in progress ${timeStamp.getTime()}"
+                val content = getString(R.string.temperature_measurement, timeStamp.getTime())
 
                 notificationManager?.notify(
                     NOTIFICATION_ID,
@@ -126,21 +124,22 @@ class ForegroundService: Service() {
     }
 
     private fun getTempCpu(): String {
-        val tempCpu = mutableListOf<String>()
-        var temp: String?
-        var type: String?
+        val tempCpu = StringBuilder()
         for (count in 0 until NUMBER_OF_DATA_READ_CYCLES) {
-            temp = getTemp(count)
-            type = getType(count)
+            val temp = getTemp(count)
+            val type = getType(count)
             type?.let {
                 temp?.let {
                     if (temp.toFloat() > 0) {
-                        tempCpu.add("$type $temp")
+                        tempCpu.append(type)
+                        tempCpu.append(ITEM_SEPARATOR)
+                        tempCpu.append(temp)
+                        tempCpu.append(STRING_SEPARATOR)
                     }
                 }
             }
         }
-        return tempCpu.joinToString(MainViewModel.SEPARATOR)
+        return tempCpu.toString()
     }
 
     private fun getTemp(step: Int): String? {
@@ -240,10 +239,11 @@ class ForegroundService: Service() {
     }
 
     companion object {
-
         private const val CHANNEL_ID = "Channel_ID"
         private const val NOTIFICATION_ID = 777
         private const val INTERVAL = 1000L
         const val NUMBER_OF_DATA_READ_CYCLES = 100
+        const val STRING_SEPARATOR = ", "
+        const val ITEM_SEPARATOR = ":"
     }
 }

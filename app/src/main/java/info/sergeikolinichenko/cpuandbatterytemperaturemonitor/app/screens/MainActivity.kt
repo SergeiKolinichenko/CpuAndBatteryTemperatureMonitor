@@ -4,7 +4,6 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -12,9 +11,11 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModelProvider
+import com.google.android.material.snackbar.Snackbar
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.R
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.ForegroundService
-import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.screens.MainViewModel.Companion.SEPARATOR
+import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.ForegroundService.Companion.ITEM_SEPARATOR
+import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.ForegroundService.Companion.STRING_SEPARATOR
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.utils.Utils.COMMAND_ID
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.utils.Utils.COMMAND_START
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.utils.Utils.COMMAND_STOP
@@ -39,15 +40,15 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
         _binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        lifecycle.addObserver(this)
+//        lifecycle.addObserver(this)
 
         checkWritePermission()
 
         // Observers
-        viewModel.tempsList.observe(this) {
+        viewModel.tempsLiveData.observe(this) {
             val lastIndex = it.lastIndex
             if (lastIndex >= 0) {
-                binding.tvTempBattery.text = it[lastIndex].tempBat
+                binding.tvTempBattery.text = getString(R.string.battery, it[lastIndex].tempBat)
                 val tempCpu = parseTempCpu(it[lastIndex].tempCpu)
                 binding.tvTempCpu.text = tempCpu
             } else {
@@ -55,31 +56,49 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
             }
         }
 
-        viewModel.showMessage.observe(this) {
+        viewModel.message.observe(this) {
             showToast(getString(it))
         }
 
         // OnClickListeners
         binding.butClearDb.setOnClickListener {
-            viewModel.clearDatabase()
+            showSnakeBar(
+                getString(R.string.would_like_clear_database),
+                getString(R.string.clear_database),
+                ::clearDatabase
+            )
         }
         binding.butSaveFile.setOnClickListener {
-            viewModel.saveCsv()
+            viewModel.saveFileCsv()
         }
         binding.butExitApp.setOnClickListener {
-            lifecycle.removeObserver(this)
-            finish()
+            showSnakeBar(
+                getString(R.string.would_like_exit_app),
+                getString(R.string.exit_application),
+                ::exitApp
+            )
         }
     }
 
+    private fun clearDatabase() {
+        viewModel.clearDatabase()
+    }
+
+    private fun exitApp() {
+        lifecycle.removeObserver(this)
+        finish()
+    }
+
     private fun parseTempCpu(text: String): String {
-        val list = text.split(SEPARATOR)
-        var string = ""
-        for (i in list) {
-            string += "$i\n"
-        }
-        Log.d("MyLog", string)
-        return string
+        return text
+            .replace(
+            STRING_SEPARATOR,
+            END_OF_LINE
+        )
+            .replace(
+                ITEM_SEPARATOR,
+                SPACE
+            )
     }
 
     override fun onDestroy() {
@@ -124,8 +143,22 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
             permissions[0] == Manifest.permission.WRITE_EXTERNAL_STORAGE &&
             grantResults[0] == PackageManager.PERMISSION_GRANTED
         ) {
-            viewModel.saveCsv()
+            viewModel.saveFileCsv()
         }
+    }
+
+    private fun showSnakeBar (
+        messageText: String,
+        buttonText: String,
+        action: () -> Unit
+    ) {
+        Snackbar.make(
+            binding.root,
+            messageText,
+            Snackbar.LENGTH_LONG
+        )
+            .setAction(buttonText) {action()}
+            .show()
     }
 
     private fun showToast(message: String) {
@@ -134,5 +167,7 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
 
     companion object {
         const val REQUEST_CODE = 101
+        const val END_OF_LINE = "\n"
+        const val SPACE = " "
     }
 }

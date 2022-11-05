@@ -9,7 +9,11 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.R
+import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.ForegroundService.Companion.ITEM_SEPARATOR
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.ForegroundService.Companion.NUMBER_OF_DATA_READ_CYCLES
+import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.ForegroundService.Companion.STRING_SEPARATOR
+import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.screens.MainActivity.Companion.END_OF_LINE
+import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.screens.MainActivity.Companion.SPACE
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.utils.Utils.getFullDate
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.domain.models.Temps
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.domain.usecases.AddTemps
@@ -19,6 +23,7 @@ import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.domain.usecases.G
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.*
+import java.lang.StringBuilder
 
 /** Created by Sergei Kolinichenko on 25.10.2022 at 09:02 (GMT+3) **/
 
@@ -30,30 +35,31 @@ class MainViewModel(
     getAllTempsLiveData: GetAllTempsLiveData
 ) : ViewModel() {
 
+    val tempsLiveData: LiveData<List<Temps>> = getAllTempsLiveData()
+
     private var _temps: List<Temps>? = null
     private val temps: List<Temps>
         get() = _temps ?: throw RuntimeException("List<Temps> equal null")
 
-    val tempsList = getAllTempsLiveData.invoke()
+    private var _message = MutableLiveData<Int>()
+    val message: LiveData<Int>
+        get() = _message
 
-    private var _showMessage = MutableLiveData<Int>()
-    val showMessage: LiveData<Int>
-        get() = _showMessage
+    private val stringFileSaved = R.string.csv_file_saved
+    private val stringFileSaveFailed = R.string.csv_file_save_filed
+    private val stringDataBaseCleared = R.string.database_cleared
 
     private var cycleWriteData: Boolean = true
-    private val contStringDatabaseCleared = R.string.database_cleared
-    private val contStringCsvFileSaved = R.string.csv_file_saved
-    private val contStringCsvFileSaveFiled = R.string.csv_file_save_filed
 
-        init {
+    init {
         getTemperatures()
     }
 
     private fun getTemperatures() {
         viewModelScope.launch {
             while (cycleWriteData) {
-                val tempCpu = getTempCpu()
                 val timeStamp = System.currentTimeMillis()
+                val tempCpu = getTempCpu()
                 val tempBat = getTempBat()
                 val temps = Temps(
                     timeStamp,
@@ -70,7 +76,7 @@ class MainViewModel(
         viewModelScope.launch {
             clearDb.invoke()
         }
-        _showMessage.value = contStringDatabaseCleared
+        _message.value = stringDataBaseCleared
     }
 
     private fun getTempBat(): String {
@@ -82,21 +88,22 @@ class MainViewModel(
     }
 
     private fun getTempCpu(): String {
-        val tempCpu = mutableListOf<String>()
-        var temp: String?
-        var type: String?
+        val tempCpu = StringBuilder()
         for (count in 0 until NUMBER_OF_DATA_READ_CYCLES) {
-            temp = getTemp(count)
-            type = getType(count)
+            val temp = getTemp(count)
+            val type = getType(count)
             type?.let {
                 temp?.let {
                     if (temp.toFloat() > 0) {
-                        tempCpu.add("$type $temp")
+                        tempCpu.append(type)
+                        tempCpu.append(ITEM_SEPARATOR)
+                        tempCpu.append(temp)
+                        tempCpu.append(STRING_SEPARATOR)
                     }
                 }
             }
         }
-        return tempCpu.joinToString(SEPARATOR)
+        return tempCpu.toString()
     }
 
     private fun getTemp(step: Int): String? {
@@ -141,36 +148,28 @@ class MainViewModel(
         }
     }
 
-    fun saveCsv() {
+    fun saveFileCsv() {
         cycleWriteData = false
         viewModelScope.launch {
             _temps = getAllTemps.invoke()
+        }
             kotlin.runCatching {
-                val filePath = getFilePath()
-                val csvFail = File(filePath, "temperatures.csv")
-                if (!csvFail.exists()) {
-                    csvFail.createNewFile()
-                } else {
-                    csvFail.delete()
-                    csvFail.createNewFile()
-                }
-                val fileOutputStream = FileOutputStream(csvFail)
+                val fileOutputStream = FileOutputStream(getFile())
                 val outputStreamWriter = OutputStreamWriter(fileOutputStream)
                 try {
                     outputStreamWrite(outputStreamWriter, temps)
-                    _showMessage.value = contStringCsvFileSaved
+                    _message.value = stringFileSaved
                 } catch (e: Exception) {
-                    _showMessage.value = contStringCsvFileSaveFiled
+                    _message.value = stringFileSaveFailed
                 } finally {
                     outputStreamWriter.close()
                     fileOutputStream.close()
                     cycleWriteData = true
                 }
             }
-        }
     }
 
-    private fun getFilePath(): File {
+    private fun getFile(): File {
         val filePath = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             val path =
                 Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
@@ -182,7 +181,9 @@ class MainViewModel(
         if (!filePath.exists()) {
             filePath.mkdir()
         }
-        return filePath
+        val fail = File(filePath, NAME_FILE)
+        fail.createNewFile()
+        return fail
     }
 
     private fun outputStreamWrite(
@@ -191,18 +192,17 @@ class MainViewModel(
     ) {
         for (item in temps.indices) {
             val dateTime = temps[item].timeStamp.getFullDate()
-            val tempCpu = temps[item].tempCpu
+            val tempCpu = temps[item].tempCpu.replace(ITEM_SEPARATOR, SPACE)
             val tempBat = "Battery ${temps[item].tempBat}"
-            outputStreamWriter.append(
-                "$dateTime," +
-                        " $tempCpu," +
-                        " $tempBat\n"
-            )
+            outputStreamWriter.append(dateTime)
+            outputStreamWriter.append(tempCpu)
+            outputStreamWriter.append(tempBat)
+            outputStreamWriter.append(END_OF_LINE)
         }
     }
 
     companion object {
         private const val INTERVAL = 1000L
-        const val SEPARATOR = ", "
+        private const val NAME_FILE = "temperatures.csv"
     }
 }
