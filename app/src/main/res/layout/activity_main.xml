@@ -32,23 +32,29 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tv_temp_battery"/>
-
-    <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/tv_temp_cpu"
+    
+    <ScrollView
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:textColor="@color/black"
-        android:textSize="14sp"
-        android:textStyle="bold"
         android:layout_marginTop="5dp"
         android:layout_marginStart="10dp"
         android:layout_marginEnd="10dp"
-        android:paddingBottom="5dp"
         app:layout_constraintBottom_toTopOf="@id/view2"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/view1"
+        app:layout_constraintTop_toBottomOf="@id/view1">
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tv_temp_cpu"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/black"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:paddingBottom="5dp"
         tools:text="CPU: 37" />
+
+    </ScrollView>
 
     <View
         android:id="@+id/view2"

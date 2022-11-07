@@ -1,9 +1,11 @@
 package info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.screens
 
+import android.content.ContentResolver
 import android.content.Intent
 import android.os.BatteryManager
 import android.os.Build
 import android.os.Environment
+import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -23,7 +25,6 @@ import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.domain.usecases.G
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.*
-import java.lang.StringBuilder
 
 /** Created by Sergei Kolinichenko on 25.10.2022 at 09:02 (GMT+3) **/
 
@@ -45,6 +46,11 @@ class MainViewModel(
     val message: LiveData<Int>
         get() = _message
 
+    private var _intent = MutableLiveData<Intent>()
+    val intent: LiveData<Intent>
+        get() = _intent
+
+    private val stringFileSavedCsvDirectory = R.string.csv_file_saved_csv_directory
     private val stringFileSaved = R.string.csv_file_saved
     private val stringFileSaveFailed = R.string.csv_file_save_filed
     private val stringDataBaseCleared = R.string.database_cleared
@@ -148,57 +154,76 @@ class MainViewModel(
         }
     }
 
-    fun saveFileCsv() {
+    fun saveToFileCsv() {
         cycleWriteData = false
         viewModelScope.launch {
             _temps = getAllTemps.invoke()
         }
-            kotlin.runCatching {
-                val fileOutputStream = FileOutputStream(getFile())
-                val outputStreamWriter = OutputStreamWriter(fileOutputStream)
-                try {
-                    outputStreamWrite(outputStreamWriter, temps)
-                    _message.value = stringFileSaved
-                } catch (e: Exception) {
-                    _message.value = stringFileSaveFailed
-                } finally {
-                    outputStreamWriter.close()
-                    fileOutputStream.close()
-                    cycleWriteData = true
-                }
-            }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            saveFileFromQStart()
+        } else {
+            saveFileBellowQ()
+        }
+        cycleWriteData = true
     }
 
-    private fun getFile(): File {
-        val filePath = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            val path =
-                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-            File(path.absolutePath + "/" + "CSV_FILE")
-        } else {
-            val path = Environment.getExternalStorageDirectory()
-            File(path.absolutePath + "/" + "CSV_FILE")
+    private fun saveFileFromQStart() {
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+        intent.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                Intent.FLAG_GRANT_WRITE_URI_PERMISSION or
+                Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+        _intent.value = intent
+    }
+
+    fun saveFileFromQEnd(file: DocumentFile?, cr: ContentResolver) {
+        var result: Boolean
+        val myFile = file?.createFile("*/csv", NAME_FILE)
+        val os = myFile?.let { cr.openOutputStream(it.uri) }
+        val osw = OutputStreamWriter(os)
+        os.use {
+            result = outputDataWrite(osw)
         }
+        _message.value = if (result) stringFileSaved
+        else stringFileSaveFailed
+    }
+
+    private fun saveFileBellowQ() {
+        val path = Environment.getExternalStorageDirectory()
+        val filePath = File(path.absolutePath + "/" + "CSV_FILE")
+        var result: Boolean
+
         if (!filePath.exists()) {
             filePath.mkdir()
         }
-        val fail = File(filePath, NAME_FILE)
-        fail.createNewFile()
-        return fail
+
+        val file = File(filePath, NAME_FILE)
+        val fos = FileOutputStream(file)
+        fos.use {
+            val osw = OutputStreamWriter(fos)
+            result = outputDataWrite(osw)
+        }
+        _message.value = if (result) stringFileSavedCsvDirectory
+        else stringFileSaveFailed
     }
 
-    private fun outputStreamWrite(
-        outputStreamWriter: OutputStreamWriter,
-        temps: List<Temps>
-    ) {
-        for (item in temps.indices) {
-            val dateTime = temps[item].timeStamp.getFullDate()
-            val tempCpu = temps[item].tempCpu.replace(ITEM_SEPARATOR, SPACE)
-            val tempBat = "Battery ${temps[item].tempBat}"
-            outputStreamWriter.append(dateTime)
-            outputStreamWriter.append(tempCpu)
-            outputStreamWriter.append(tempBat)
-            outputStreamWriter.append(END_OF_LINE)
+    private fun outputDataWrite(
+        osw: OutputStreamWriter
+    ): Boolean {
+        var result = false
+        osw.use {
+            _temps?.let {
+                for (item in temps.indices) {
+                    val dateTime = temps[item].timeStamp.getFullDate()
+                    val tempCpu = temps[item].tempCpu.replace(ITEM_SEPARATOR, SPACE)
+                    val tempBat = "Battery ${temps[item].tempBat}"
+                    osw.append(
+                        "$dateTime $tempCpu $tempBat $END_OF_LINE"
+                    )
+                }
+                result = true
+            }
         }
+        return result
     }
 
     companion object {

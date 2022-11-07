@@ -1,13 +1,17 @@
 package info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.screens
 
 import android.Manifest
+import android.content.ContentResolver
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModelProvider
@@ -20,6 +24,8 @@ import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.utils.Utils.C
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.utils.Utils.COMMAND_START
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.utils.Utils.COMMAND_STOP
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.databinding.ActivityMainBinding
+import java.io.OutputStreamWriter
+
 
 class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
 
@@ -40,7 +46,7 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
         _binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-//        lifecycle.addObserver(this)
+        lifecycle.addObserver(this)
 
         checkWritePermission()
 
@@ -54,6 +60,9 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
             } else {
                 binding.tvTempBattery.text = getString(R.string.no_data)
             }
+        }
+        viewModel.intent.observe(this) {
+            startActivityForResult(it, 111)
         }
 
         viewModel.message.observe(this) {
@@ -69,7 +78,7 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
             )
         }
         binding.butSaveFile.setOnClickListener {
-            viewModel.saveFileCsv()
+            viewModel.saveToFileCsv()
         }
         binding.butExitApp.setOnClickListener {
             showSnakeBar(
@@ -90,7 +99,7 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
     }
 
     private fun parseTempCpu(text: String): String {
-        return text
+        val parsedText = text
             .replace(
             STRING_SEPARATOR,
             END_OF_LINE
@@ -99,6 +108,8 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
                 ITEM_SEPARATOR,
                 SPACE
             )
+
+        return parsedText
     }
 
     override fun onDestroy() {
@@ -143,8 +154,27 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
             permissions[0] == Manifest.permission.WRITE_EXTERNAL_STORAGE &&
             grantResults[0] == PackageManager.PERMISSION_GRANTED
         ) {
-            viewModel.saveFileCsv()
+            viewModel.saveToFileCsv()
         }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        val contentResolver: ContentResolver = contentResolver
+
+        val takeFlags = data?.flags?.and(
+            (Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                    Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+        ) ?: throw RuntimeException("Not available folderUri")
+
+        //uri каталога, в который будет разрешена запись
+        val folderUri: Uri = data.data ?:
+        throw RuntimeException("Not available folderUri")
+
+        contentResolver.takePersistableUriPermission(folderUri, takeFlags)
+        val pickedDir = DocumentFile.fromTreeUri(this, folderUri)
+        viewModel.saveFileFromQEnd(pickedDir, contentResolver)
     }
 
     private fun showSnakeBar (

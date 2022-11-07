@@ -7,7 +7,8 @@
     <string name="battery">Battery %1$s</string>
     <string name="temperature_measurement">Temperature measurement in progress %1$s</string>
     <string name="database_cleared">Database cleared</string>
-    <string name="csv_file_saved">The csv file is saved in CSV_FILE directory</string>
+    <string name="csv_file_saved_csv_directory">The csv file is saved in CSV_FILE directory</string>
+    <string name="csv_file_saved">The file is saved in the specified directory</string>
     <string name="csv_file_save_filed">Writing csv file failed</string>
     <string name="would_like_clear_database">Sure you would like to clear database?</string>
     <string name="would_like_exit_app">Sure you would like to exit app?</string>
