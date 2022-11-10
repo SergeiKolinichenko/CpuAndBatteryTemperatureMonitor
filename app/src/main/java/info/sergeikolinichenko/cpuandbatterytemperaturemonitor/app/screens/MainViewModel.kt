@@ -50,6 +50,12 @@ class MainViewModel(
     val intent: LiveData<Intent>
         get() = _intent
 
+    // Temperature monitoring start
+    private val startMonitoring = System.currentTimeMillis()
+    private var _timeMonitoring = MutableLiveData<Long>()
+    val timeMonitoring: LiveData<Long>
+    get() = _timeMonitoring
+
     private val stringFileSavedCsvDirectory = R.string.csv_file_saved_csv_directory
     private val stringFileSaved = R.string.csv_file_saved
     private val stringFileSaveFailed = R.string.csv_file_save_filed
@@ -58,7 +64,12 @@ class MainViewModel(
     private var cycleWriteData: Boolean = true
 
     init {
+        getStartMonitoringTime()
         getTemperatures()
+    }
+
+    private fun getStartMonitoringTime() {
+        _timeMonitoring.value = startMonitoring
     }
 
     private fun getTemperatures() {
@@ -94,22 +105,21 @@ class MainViewModel(
     }
 
     private fun getTempCpu(): String {
-        val tempCpu = StringBuilder()
+        var tempCpu = ""
         for (count in 0 until NUMBER_OF_DATA_READ_CYCLES) {
             val temp = getTemp(count)
             val type = getType(count)
             type?.let {
                 temp?.let {
                     if (temp.toFloat() > 0) {
-                        tempCpu.append(type)
-                        tempCpu.append(ITEM_SEPARATOR)
-                        tempCpu.append(temp)
-                        tempCpu.append(STRING_SEPARATOR)
+                        tempCpu = tempCpu + type + ITEM_SEPARATOR + temp + STRING_SEPARATOR
                     }
                 }
             }
         }
-        return tempCpu.toString()
+        val lastIndex = tempCpu.lastIndexOf(STRING_SEPARATOR)
+        tempCpu = tempCpu.substring(0, lastIndex)
+        return tempCpu
     }
 
     private fun getTemp(step: Int): String? {
@@ -177,7 +187,7 @@ class MainViewModel(
 
     fun saveFileFromQEnd(file: DocumentFile?, cr: ContentResolver) {
         var result: Boolean
-        val myFile = file?.createFile("*/csv", NAME_FILE)
+        val myFile = file?.createFile(MIME_TYPE, NAME_FILE)
         val os = myFile?.let { cr.openOutputStream(it.uri) }
         val osw = OutputStreamWriter(os)
         os.use {
@@ -229,5 +239,6 @@ class MainViewModel(
     companion object {
         private const val INTERVAL = 1000L
         private const val NAME_FILE = "temperatures.csv"
+        private const val MIME_TYPE = "*/txt"
     }
 }

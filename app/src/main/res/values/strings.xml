@@ -4,8 +4,10 @@
     <string name="clear_db">CLEAR DB</string>
     <string name="exit_app">EXIT APP</string>
     <string name="no_data">no data</string>
+    <string name="monitoring_start">MONITORING START</string>
+    <string name="monitoring_stop">MONITORING STOP</string>
     <string name="battery">Battery %1$s</string>
-    <string name="temperature_measurement">Temperature measurement in progress %1$s</string>
+    <string name="temperature_measurement">Device temperature monitoring %1$s</string>
     <string name="database_cleared">Database cleared</string>
     <string name="csv_file_saved_csv_directory">The csv file is saved in CSV_FILE directory</string>
     <string name="csv_file_saved">The file is saved in the specified directory</string>
@@ -14,5 +16,8 @@
     <string name="would_like_exit_app">Sure you would like to exit app?</string>
     <string name="clear_database">CLEAR</string>
     <string name="exit_application">EXIT</string>
+    <string name="monitoring_switch">Monitoring Switch</string>
+    <string name="stop">STOP</string>
+    <string name="start">START</string>
 
 </resources>
