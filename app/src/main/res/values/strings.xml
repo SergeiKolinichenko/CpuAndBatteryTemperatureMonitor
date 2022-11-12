@@ -1,13 +1,14 @@
 <resources>
     <string name="app_name">CPU and battery temperature monitor</string>
-    <string name="send_file">SAVE FILE</string>
-    <string name="clear_db">CLEAR DB</string>
-    <string name="exit_app">EXIT APP</string>
+    <string name="send_file">SAVE\nFILE</string>
+    <string name="clear_db">CLEAR\nDB</string>
+    <string name="exit_app">EXIT\nAPP</string>
     <string name="no_data">no data</string>
     <string name="monitoring_start">MONITORING START</string>
     <string name="monitoring_stop">MONITORING STOP</string>
     <string name="battery">Battery %1$s</string>
     <string name="temperature_measurement">Device temperature monitoring %1$s</string>
+    <string name="screen_title_string">Start: %1$s\nElapsed: %2$s</string>
     <string name="database_cleared">Database cleared</string>
     <string name="csv_file_saved_csv_directory">The csv file is saved in CSV_FILE directory</string>
     <string name="csv_file_saved">The file is saved in the specified directory</string>
@@ -16,8 +17,9 @@
     <string name="would_like_exit_app">Sure you would like to exit app?</string>
     <string name="clear_database">CLEAR</string>
     <string name="exit_application">EXIT</string>
-    <string name="monitoring_switch">Monitoring Switch</string>
-    <string name="stop">STOP</string>
-    <string name="start">START</string>
+    <string name="monitoring_switch">MONITORING</string>
+    <string name="stop">OFF</string>
+    <string name="start">ON</string>
+    <string name="monitoring_stopped">Monitoring stopped.\n</string>
 
 </resources>

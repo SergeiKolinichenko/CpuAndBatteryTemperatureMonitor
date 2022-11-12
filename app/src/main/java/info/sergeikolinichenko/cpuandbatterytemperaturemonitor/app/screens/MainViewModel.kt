@@ -16,12 +16,9 @@ import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.ForegroundSer
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.ForegroundService.Companion.STRING_SEPARATOR
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.screens.MainActivity.Companion.END_OF_LINE
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.screens.MainActivity.Companion.SPACE
-import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.utils.Utils.getFullDate
+import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.utils.TimeUtils.getFullDate
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.domain.models.Temps
-import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.domain.usecases.AddTemps
-import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.domain.usecases.ClearDb
-import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.domain.usecases.GetAllTemps
-import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.domain.usecases.GetAllTempsLiveData
+import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.domain.usecases.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.*
@@ -29,11 +26,13 @@ import java.io.*
 /** Created by Sergei Kolinichenko on 25.10.2022 at 09:02 (GMT+3) **/
 
 class MainViewModel(
+    getAllTempsLiveData: GetAllTempsLiveData,
     private val registerReceiver: Intent?,
     private val clearDb: ClearDb,
     private val addTemps: AddTemps,
     private val getAllTemps: GetAllTemps,
-    getAllTempsLiveData: GetAllTempsLiveData
+    private val setMonitorStartStop: SetMonitorStartStop,
+    getMonitorStartStop: GetMonitorStartStop,
 ) : ViewModel() {
 
     val tempsLiveData: LiveData<List<Temps>> = getAllTempsLiveData()
@@ -50,22 +49,32 @@ class MainViewModel(
     val intent: LiveData<Intent>
         get() = _intent
 
+    private var _cycleForMonitor = MutableLiveData<Boolean>()
+    val cycleForMonitor: LiveData<Boolean>
+        get() = _cycleForMonitor
+    private val monStart: Boolean
+        get() = cycleForMonitor.value ?: false
+
     // Temperature monitoring start
-    private val startMonitoring = System.currentTimeMillis()
+    var startMonitoring = System.currentTimeMillis()
     private var _timeMonitoring = MutableLiveData<Long>()
     val timeMonitoring: LiveData<Long>
-    get() = _timeMonitoring
+        get() = _timeMonitoring
 
     private val stringFileSavedCsvDirectory = R.string.csv_file_saved_csv_directory
     private val stringFileSaved = R.string.csv_file_saved
     private val stringFileSaveFailed = R.string.csv_file_save_filed
     private val stringDataBaseCleared = R.string.database_cleared
 
-    private var cycleWriteData: Boolean = true
-
     init {
+        _cycleForMonitor.value = getMonitorStartStop()
         getStartMonitoringTime()
         getTemperatures()
+    }
+
+    fun setTimeStartMonitoring(time: Long) {
+        startMonitoring = time
+        getStartMonitoringTime()
     }
 
     private fun getStartMonitoringTime() {
@@ -74,7 +83,7 @@ class MainViewModel(
 
     private fun getTemperatures() {
         viewModelScope.launch {
-            while (cycleWriteData) {
+            while (monStart) {
                 val timeStamp = System.currentTimeMillis()
                 val tempCpu = getTempCpu()
                 val tempBat = getTempBat()
@@ -84,16 +93,10 @@ class MainViewModel(
                     tempBat
                 )
                 addTemps.invoke(temps)
+                _timeMonitoring.value = timeStamp - startMonitoring
                 delay(INTERVAL)
             }
         }
-    }
-
-    fun clearDatabase() {
-        viewModelScope.launch {
-            clearDb.invoke()
-        }
-        _message.value = stringDataBaseCleared
     }
 
     private fun getTempBat(): String {
@@ -164,8 +167,30 @@ class MainViewModel(
         }
     }
 
+    fun clearDatabase() {
+        viewModelScope.launch {
+            clearDb.invoke()
+        }
+
+        startMonitoring = System.currentTimeMillis()
+        getStartMonitoringTime()
+
+        _message.value = stringDataBaseCleared
+    }
+
+    fun setMonitorMode(mode: Boolean) {
+        _cycleForMonitor.value = mode
+
+        if (mode) {
+            getTemperatures()
+            clearDatabase()
+        }
+
+        setMonitorStartStop.invoke(mode)
+    }
+
     fun saveToFileCsv() {
-        cycleWriteData = false
+        _cycleForMonitor.value = false
         viewModelScope.launch {
             _temps = getAllTemps.invoke()
         }
@@ -174,7 +199,7 @@ class MainViewModel(
         } else {
             saveFileBellowQ()
         }
-        cycleWriteData = true
+        _cycleForMonitor.value = true
     }
 
     private fun saveFileFromQStart() {
@@ -187,7 +212,15 @@ class MainViewModel(
 
     fun saveFileFromQEnd(file: DocumentFile?, cr: ContentResolver) {
         var result: Boolean
-        val myFile = file?.createFile(MIME_TYPE, NAME_FILE)
+        var myFile = file?.findFile(NAME_FILE)
+
+        if (myFile != null) {
+            if (myFile.exists()){
+                myFile.delete()
+                myFile = file?.createFile(MIME_TYPE, NAME_FILE)
+            }
+        }
+
         val os = myFile?.let { cr.openOutputStream(it.uri) }
         val osw = OutputStreamWriter(os)
         os.use {

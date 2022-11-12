@@ -15,15 +15,21 @@
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="15dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="10dp"
+            android:layout_marginBottom="5dp"
             app:cardCornerRadius="5dp"
-            app:cardElevation="5dp"
-            app:cardUseCompatPadding="true">
+            app:cardElevation="5dp">
 
             <com.google.android.material.textview.MaterialTextView
                 android:id="@+id/tv_time_monitoring"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
                 android:layout_marginStart="5dp"
+                android:layout_marginEnd="5dp"
+                android:layout_marginBottom="5dp"
                 android:textColor="@color/black"
                 android:textSize="14sp"
                 android:textStyle="bold"
@@ -34,18 +40,16 @@
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_margin="10dp"
             app:cardCornerRadius="5dp"
             app:cardElevation="5dp"
-            app:cardUseCompatPadding="true"
             app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
             <androidx.core.widget.NestedScrollView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="5dp"
-                android:layout_marginStart="10dp"
-                android:fillViewport="true"
-                android:scrollbars="vertical">
+                android:layout_marginStart="10dp">
 
                 <FrameLayout
                     android:layout_width="match_parent"
@@ -62,7 +66,7 @@
                         android:id="@+id/tv_title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="5dp"
+                        android:layout_marginStart="10dp"
                         android:layout_marginEnd="5dp"
                         android:textColor="@color/black"
                         android:textSize="14sp"
@@ -70,11 +74,17 @@
                         android:background="@android:color/transparent"
                         tools:text="CPU:" />
 
+                    <View
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"/>
+
                     <com.google.android.material.textview.MaterialTextView
                         android:id="@+id/tv_temp"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="100dp"
+                        android:layout_marginStart="5dp"
+                        android:layout_marginEnd="20dp"
                         android:textColor="@color/black"
                         android:textSize="14sp"
                         android:textStyle="bold"
@@ -131,24 +141,28 @@
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/but_save_file"
                 style="@style/Button_BottomAppBar"
-                android:text="@string/send_file" />
+                android:text="@string/send_file"/>
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/but_clear_db"
                 style="@style/Button_BottomAppBar"
-                android:text="@string/clear_db" />
+                android:text="@string/clear_db"/>
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/but_exit_app"
                 style="@style/Button_BottomAppBar"
-                android:text="@string/exit_app" />
+                android:text="@string/exit_app"/>
 
             <LinearLayout
-                android:layout_width="0dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:gravity="center"
-                android:orientation="vertical">
+                android:orientation="vertical"
+                android:layout_marginStart="2dp"
+                android:layout_marginEnd="2dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="5dp">
 
                 <com.google.android.material.textview.MaterialTextView
                     style="@style/TextView_BottomAppBar"
@@ -157,48 +171,33 @@
 
                 <LinearLayout
                     android:layout_width="wrap_content"
-                    android:layout_height="35dp"
-                    android:layout_marginBottom="5dp"
+                    android:layout_height="wrap_content"
                     android:orientation="horizontal">
 
                     <com.google.android.material.textview.MaterialTextView
                         style="@style/TextView_BottomAppBar"
-                        android:layout_weight="1"
                         android:text="@string/stop"
-                        tools:text="STOP" />
+                        tools:text="OFF" />
 
                     <com.google.android.material.switchmaterial.SwitchMaterial
-                        android:id="@+id/switch1"
-                        android:layout_width="wrap_content"
+                        android:id="@+id/sw_start_stop"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:checked="true" />
+                        android:checked="true"
+                        app:thumbTint="@color/grey_400"
+                        app:trackTint="@color/grey_200"
+                        tools:ignore="TouchTargetSizeCheck" />
 
                     <com.google.android.material.textview.MaterialTextView
                         style="@style/TextView_BottomAppBar"
-                        android:layout_weight="1"
                         android:text="@string/start"
-                        tools:text="START" />
+                        tools:text="ON" />
 
                 </LinearLayout>
             </LinearLayout>
-
         </LinearLayout>
 
-
     </com.google.android.material.bottomappbar.BottomAppBar>
-
-    <!-- com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
-        android:layout_width="120"
-        android:layout_height="wrap_content"
-        android:text="@string/monitoring_stop"
-        android:textSize="11sp"
-        android:textStyle="bold"
-        android:textColor="?attr/colorOnPrimary"
-        android:textAlignment="center"
-        app:backgroundTint="?attr/colorPrimary"
-        app:behavior_hideable="true"
-        app:layout_anchor="@id/bab"
-        app:elevation="10dp"/ -->
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

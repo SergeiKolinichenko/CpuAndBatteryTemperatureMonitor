@@ -6,10 +6,7 @@ import android.content.IntentFilter
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.data.TempMonRepositoryImpl
-import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.domain.usecases.AddTemps
-import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.domain.usecases.ClearDb
-import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.domain.usecases.GetAllTemps
-import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.domain.usecases.GetAllTempsLiveData
+import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.domain.usecases.*
 
 /** Created by Sergei Kolinichenko on 25.10.2022 at 09:04 (GMT+3) **/
 
@@ -23,6 +20,9 @@ class MainViewModelFactory(application: Application) : ViewModelProvider.Factory
     private val getAllTemps = GetAllTemps(repository)
     private val getAllTempsLiveData = GetAllTempsLiveData(repository)
 
+    private val setMonitorStartStop = SetMonitorStartStop(repository)
+    private val getMonitorStartStop = GetMonitorStartStop(repository)
+
     private val registerReceiver = application.registerReceiver(
         null,
         IntentFilter(Intent.ACTION_BATTERY_CHANGED)
@@ -32,11 +32,13 @@ class MainViewModelFactory(application: Application) : ViewModelProvider.Factory
         return if (modelClass.isAssignableFrom(MainViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
             MainViewModel(
+                getAllTempsLiveData,
                 registerReceiver,
                 clearDb,
                 addTemps,
                 getAllTemps,
-                getAllTempsLiveData
+                setMonitorStartStop,
+                getMonitorStartStop
             ) as T
         } else throw RuntimeException("Unknown view Model class $modelClass")
     }

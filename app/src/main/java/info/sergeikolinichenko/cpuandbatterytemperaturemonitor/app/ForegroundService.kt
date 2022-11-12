@@ -13,11 +13,8 @@ import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.R
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.screens.MainActivity
-import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.utils.Utils.COMMAND_ID
-import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.utils.Utils.COMMAND_START
-import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.utils.Utils.COMMAND_STOP
-import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.utils.Utils.INVALID
-import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.utils.Utils.getTime
+import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.utils.TimeUtils.differenceInTime
+import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.utils.TimeUtils.getFullDate
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.data.TempMonRepositoryImpl
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.domain.models.Temps
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.domain.usecases.AddTemps
@@ -27,12 +24,13 @@ import java.io.FileReader
 
 /** Created by Sergei Kolinichenko on 25.10.2022 at 10:52 (GMT+3) **/
 
-class ForegroundService: Service() {
+class ForegroundService : Service() {
 
     private var isServiceStarted = false
+    private var startMonitoring: Long = START_MONITORING_ERROR
     private var notificationManager: NotificationManager? = null
     private var job: Job? = null
-    private val repository by lazy { TempMonRepositoryImpl(application)}
+    private val repository by lazy { TempMonRepositoryImpl(application) }
     private val addTemps by lazy { AddTemps(repository) }
 
     private val builder by lazy {
@@ -55,7 +53,18 @@ class ForegroundService: Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+
+        intent?.let {
+            if (intent.hasExtra(START_MONITORING) && startMonitoring == START_MONITORING_ERROR) {
+                startMonitoring = intent.getLongExtra(
+                    START_MONITORING,
+                    START_MONITORING_ERROR
+                )
+            }
+        }
+
         processCommand(intent)
+
         return START_REDELIVER_INTENT
     }
 
@@ -64,7 +73,7 @@ class ForegroundService: Service() {
     }
 
     private fun processCommand(intent: Intent?) {
-        when(intent?.extras?.getString(COMMAND_ID) ?: INVALID) {
+        when (intent?.extras?.getString(COMMAND_ID) ?: INVALID) {
             COMMAND_START -> {
                 commandStart()
             }
@@ -93,8 +102,12 @@ class ForegroundService: Service() {
                 val timeStamp = System.currentTimeMillis()
                 val tempBat = getTempBat()
                 val tempCpu = getTempCpu()
-
-                val content = getString(R.string.temperature_measurement, timeStamp.getTime())
+                val elapsedTime = (timeStamp - startMonitoring).differenceInTime()
+                val content = getString(
+                    R.string.screen_title_string,
+                    startMonitoring.getFullDate(),
+                    elapsedTime
+                )
 
                 notificationManager?.notify(
                     NOTIFICATION_ID,
@@ -229,10 +242,11 @@ class ForegroundService: Service() {
             this,
             MainActivity::class.java
         )
-        resultIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+        resultIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP //Intent.FLAG_ACTIVITY_NEW_TASK
+        resultIntent.putExtra(START_MONITORING, startMonitoring)
         return PendingIntent.getActivity(
             this,
-            0,
+            REQUEST_CODE_START_MONITORING,
             resultIntent,
             PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE
         )
@@ -242,6 +256,15 @@ class ForegroundService: Service() {
         private const val CHANNEL_ID = "Channel_ID"
         private const val NOTIFICATION_ID = 777
         private const val INTERVAL = 1000L
+
+        const val INVALID = "INVALID"
+        const val COMMAND_START = "COMMAND_START"
+        const val COMMAND_STOP = "COMMAND_STOP"
+        const val COMMAND_ID = "COMMAND_ID"
+        const val START_MONITORING = "START_MONITORING"
+        const val START_MONITORING_ERROR = -1L
+        const val REQUEST_CODE_START_MONITORING = 222
+
         const val NUMBER_OF_DATA_READ_CYCLES = 100
         const val STRING_SEPARATOR = ", "
         const val ITEM_SEPARATOR = ":"
