@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Следене на температурата на устройството</string>
+    <string name="send_file">ЗАПАЗЕТЕ\nФАЙЛ</string>
+    <string name="clear_db">Изчисти\nDB</string>
+    <string name="no_data">няма данни</string>
+    <string name="monitoring_start">СТАРТ КОНТРОЛ</string>
+    <string name="monitoring_stop">СПРИ КОНТРОЛ</string>
+    <string name="battery">Батерия %1$s</string>
+    <string name="temperature_measurement">Контрол на температурата на устройството %1$s</string>
+    <string name="screen_title_string">Начало: %1$s Контрол: %2$s</string>
+    <string name="database_cleared">Базата данни е изчистена.</string>
+    <string name="csv_file_saved">Файлът се записва в указаната директория.</string>
+    <string name="csv_file_save_filed">Неуспешно записване на файл.</string>
+    <string name="would_like_clear_database">Сигурни ли сте, че искате да изчистите базата данни?</string>
+    <string name="clear_database">ИЗЧИСТИ</string>
+    <string name="monitoring_switch">КОНТРОЛЬ</string>
+    <string name="stop">ИЗКЛ</string>
+    <string name="start">НА</string>
+    <string name="monitoring_stopped">Контролът спря.\n</string>
+    <string name="csv_file_saved_csv_directory">Файлът temperatures.csv се записва в директорията CSV_FILE.</string>
+</resources>

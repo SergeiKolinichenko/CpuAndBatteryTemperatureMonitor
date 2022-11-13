@@ -55,6 +55,8 @@ class MainViewModel(
     private val monStart: Boolean
         get() = cycleForMonitor.value ?: false
 
+    var checkWritePermission: (() -> Unit)? = null
+
     // Temperature monitoring start
     var startMonitoring = System.currentTimeMillis()
     private var _timeMonitoring = MutableLiveData<Long>()
@@ -197,7 +199,7 @@ class MainViewModel(
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             saveFileFromQStart()
         } else {
-            saveFileBellowQ()
+            checkWritePermission?.invoke()
         }
         _cycleForMonitor.value = true
     }
@@ -230,7 +232,7 @@ class MainViewModel(
         else stringFileSaveFailed
     }
 
-    private fun saveFileBellowQ() {
+    fun saveFileBellowQ() {
         val path = Environment.getExternalStorageDirectory()
         val filePath = File(path.absolutePath + "/" + "CSV_FILE")
         var result: Boolean

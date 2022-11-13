@@ -8,9 +8,9 @@ import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.data.dbmodels.Tem
 /** Created by Sergei Kolinichenko on 25.10.2022 at 08:05 (GMT+3) **/
 
 @Database(
-    version = 2,
     entities = [TempsDbModels::class],
-    autoMigrations = [ AutoMigration ( from = 1, to = 2, spec = AutoMigration_1_2::class ) ],
+    autoMigrations = [ AutoMigration ( from = 1, to = 2, spec = AutoMigrationFrom1To2::class ) ],
+    version = 2,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -64,4 +64,4 @@ abstract class AppDatabase : RoomDatabase() {
 @DeleteColumn(tableName = "temperatures", columnName = "tempCpu17")
 @DeleteColumn(tableName = "temperatures", columnName = "tempCpu18")
 @DeleteColumn(tableName = "temperatures", columnName = "tempCpu19")
-internal class AutoMigration_1_2: AutoMigrationSpec
+class AutoMigrationFrom1To2: AutoMigrationSpec

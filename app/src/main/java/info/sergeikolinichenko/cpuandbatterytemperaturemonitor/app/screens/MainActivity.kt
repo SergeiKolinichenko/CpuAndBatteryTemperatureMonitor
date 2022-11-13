@@ -51,10 +51,14 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
         _binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        checkWritePermission()
+//        checkWritePermissionA()
 
         initHideOfScroll()
         initSwitch()
+
+        viewModel.checkWritePermission = {
+            checkWritePermission()
+        }
 
         // get extras from ForegroundService
         val extras = intent.extras
@@ -112,16 +116,6 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
         binding.butSaveFile.setOnClickListener {
             viewModel.saveToFileCsv()
         }
-        binding.butExitApp.setOnClickListener {
-
-            ShowSnakebar.showActionSnakebar(
-                binding.root,
-                binding.bab,
-                getString(R.string.would_like_exit_app),
-                getString(R.string.exit_application),
-                ::exitApp
-            )
-        }
         binding.swStartStop.setOnCheckedChangeListener { _, isChecked ->
             viewModel.setMonitorMode(isChecked)
             if (!isChecked) {
@@ -143,11 +137,6 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
 
     private fun clearDatabase() {
         viewModel.clearDatabase()
-    }
-
-    private fun exitApp() {
-        lifecycle.removeObserver(this)
-        finish()
     }
 
     private fun getSplitString(list: List<Temps>, kind: String): String {
@@ -217,7 +206,7 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
             permissions[0] == Manifest.permission.WRITE_EXTERNAL_STORAGE &&
             grantResults[0] == PackageManager.PERMISSION_GRANTED
         ) {
-            viewModel.saveToFileCsv()
+            viewModel.saveFileBellowQ()
         }
     }
 
