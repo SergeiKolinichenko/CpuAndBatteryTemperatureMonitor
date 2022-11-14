@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "be83a604df7fafd2e8f7c4bf520606b9",
+    "identityHash": "11075a5a549e0d77cea4a4d853a3bd98",
     "entities": [
       {
         "tableName": "temperatures",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`timeStamp` INTEGER NOT NULL, `tempCpu` TEXT NOT NULL DEFAULT '', `tempBat` TEXT NOT NULL, PRIMARY KEY(`timeStamp`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`timeStamp` INTEGER NOT NULL, `tempCpu0` TEXT NOT NULL, `tempCpu1` TEXT NOT NULL, `tempCpu2` TEXT NOT NULL, `tempCpu3` TEXT NOT NULL, `tempCpu4` TEXT NOT NULL, `tempCpu5` TEXT NOT NULL, `tempCpu6` TEXT NOT NULL, `tempCpu7` TEXT NOT NULL, `tempCpu8` TEXT NOT NULL, `tempCpu9` TEXT NOT NULL, `tempCpu10` TEXT NOT NULL, `tempCpu11` TEXT NOT NULL, `tempCpu12` TEXT NOT NULL, `tempCpu13` TEXT NOT NULL, `tempCpu14` TEXT NOT NULL, `tempCpu15` TEXT NOT NULL, `tempCpu16` TEXT NOT NULL, `tempCpu17` TEXT NOT NULL, `tempCpu18` TEXT NOT NULL, `tempCpu19` TEXT NOT NULL, `tempBat` TEXT NOT NULL, PRIMARY KEY(`timeStamp`))",
         "fields": [
           {
             "fieldPath": "timeStamp",
@@ -15,11 +15,124 @@
             "notNull": true
           },
           {
-            "fieldPath": "tempCpu",
-            "columnName": "tempCpu",
+            "fieldPath": "tempCpu0",
+            "columnName": "tempCpu0",
             "affinity": "TEXT",
-            "notNull": true,
-            "defaultValue": "''"
+            "notNull": true
+          },
+          {
+            "fieldPath": "tempCpu1",
+            "columnName": "tempCpu1",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tempCpu2",
+            "columnName": "tempCpu2",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tempCpu3",
+            "columnName": "tempCpu3",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tempCpu4",
+            "columnName": "tempCpu4",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tempCpu5",
+            "columnName": "tempCpu5",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tempCpu6",
+            "columnName": "tempCpu6",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tempCpu7",
+            "columnName": "tempCpu7",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tempCpu8",
+            "columnName": "tempCpu8",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tempCpu9",
+            "columnName": "tempCpu9",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tempCpu10",
+            "columnName": "tempCpu10",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tempCpu11",
+            "columnName": "tempCpu11",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tempCpu12",
+            "columnName": "tempCpu12",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tempCpu13",
+            "columnName": "tempCpu13",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tempCpu14",
+            "columnName": "tempCpu14",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tempCpu15",
+            "columnName": "tempCpu15",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tempCpu16",
+            "columnName": "tempCpu16",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tempCpu17",
+            "columnName": "tempCpu17",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tempCpu18",
+            "columnName": "tempCpu18",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tempCpu19",
+            "columnName": "tempCpu19",
+            "affinity": "TEXT",
+            "notNull": true
           },
           {
             "fieldPath": "tempBat",
@@ -41,7 +154,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'be83a604df7fafd2e8f7c4bf520606b9')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '11075a5a549e0d77cea4a4d853a3bd98')"
     ]
   }
 }
