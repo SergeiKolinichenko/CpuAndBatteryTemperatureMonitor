@@ -10,7 +10,6 @@
     <string name="temperature_measurement">Контроль температуры устройства %1$s</string>
     <string name="screen_title_string">Старт: %1$s\nКонтроль: %2$s</string>
     <string name="database_cleared">База данных очищена.</string>
-    <string name="csv_file_saved_csv_directory">Файл temperatures.csv сохраняен в каталоге CSV_FILE.</string>
     <string name="csv_file_saved">Файл сохранён в указанном каталоге.</string>
     <string name="csv_file_save_filed">Не удалось записать файл.</string>
     <string name="would_like_clear_database">Вы уверены, что хотите очистить базу данных?</string>

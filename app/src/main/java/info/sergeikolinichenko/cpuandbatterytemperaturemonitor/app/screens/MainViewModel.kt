@@ -3,8 +3,6 @@ package info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.screens
 import android.content.ContentResolver
 import android.content.Intent
 import android.os.BatteryManager
-import android.os.Build
-import android.os.Environment
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -21,7 +19,9 @@ import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.domain.models.Tem
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.domain.usecases.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.io.*
+import java.io.BufferedReader
+import java.io.FileReader
+import java.io.OutputStreamWriter
 
 /** Created by Sergei Kolinichenko on 25.10.2022 at 09:02 (GMT+3) **/
 
@@ -55,7 +55,9 @@ class MainViewModel(
     private val monStart: Boolean
         get() = cycleForMonitor.value ?: false
 
-    var checkWritePermission: (() -> Unit)? = null
+    val startStatusMonitorLV = MutableLiveData(getMonitorStartStop())
+    private val startStatusMonitor
+        get() = startStatusMonitorLV.value ?: false
 
     // Temperature monitoring start
     var startMonitoring = System.currentTimeMillis()
@@ -63,15 +65,15 @@ class MainViewModel(
     val timeMonitoring: LiveData<Long>
         get() = _timeMonitoring
 
-    private val stringFileSavedCsvDirectory = R.string.csv_file_saved_csv_directory
+    private var stateMonitoring = false
+
     private val stringFileSaved = R.string.csv_file_saved
     private val stringFileSaveFailed = R.string.csv_file_save_filed
     private val stringDataBaseCleared = R.string.database_cleared
 
     init {
-        _cycleForMonitor.value = getMonitorStartStop()
+        statusMonitoring(startStatusMonitor)
         getStartMonitoringTime()
-        getTemperatures()
     }
 
     fun setTimeStartMonitoring(time: Long) {
@@ -181,73 +183,54 @@ class MainViewModel(
     }
 
     fun setMonitorMode(mode: Boolean) {
-        _cycleForMonitor.value = mode
-
+        statusMonitoring(mode)
         if (mode) {
-            getTemperatures()
             clearDatabase()
         }
-
         setMonitorStartStop.invoke(mode)
     }
 
-    fun saveToFileCsv() {
-        _cycleForMonitor.value = false
+    private fun statusMonitoring(status: Boolean) {
+        _cycleForMonitor.value = status
+        if (status) {
+            getTemperatures()
+        }
+    }
+
+    fun saveFileStart() {
+        stateMonitoring = cycleForMonitor.value ?: false // save monitoring status
+        statusMonitoring(STOP_MONITORING)               // stop monitoring
+
         viewModelScope.launch {
             _temps = getAllTemps.invoke()
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            saveFileFromQStart()
-        } else {
-            checkWritePermission?.invoke()
-        }
-        _cycleForMonitor.value = true
-    }
 
-    private fun saveFileFromQStart() {
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
         intent.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or
                 Intent.FLAG_GRANT_WRITE_URI_PERMISSION or
                 Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
         _intent.value = intent
+
     }
 
-    fun saveFileFromQEnd(file: DocumentFile?, cr: ContentResolver) {
+    fun saveFileEnd(file: DocumentFile?, cr: ContentResolver) {
         var result: Boolean
         var myFile = file?.findFile(NAME_FILE)
-
         if (myFile != null) {
-            if (myFile.exists()){
+            if (myFile.exists()) {
                 myFile.delete()
                 myFile = file?.createFile(MIME_TYPE, NAME_FILE)
             }
+        } else {
+            myFile = file?.createFile(MIME_TYPE, NAME_FILE)
         }
-
         val os = myFile?.let { cr.openOutputStream(it.uri) }
         val osw = OutputStreamWriter(os)
         os.use {
             result = outputDataWrite(osw)
         }
+        statusMonitoring(stateMonitoring)           // restore monitoring status
         _message.value = if (result) stringFileSaved
-        else stringFileSaveFailed
-    }
-
-    fun saveFileBellowQ() {
-        val path = Environment.getExternalStorageDirectory()
-        val filePath = File(path.absolutePath + "/" + "CSV_FILE")
-        var result: Boolean
-
-        if (!filePath.exists()) {
-            filePath.mkdir()
-        }
-
-        val file = File(filePath, NAME_FILE)
-        val fos = FileOutputStream(file)
-        fos.use {
-            val osw = OutputStreamWriter(fos)
-            result = outputDataWrite(osw)
-        }
-        _message.value = if (result) stringFileSavedCsvDirectory
         else stringFileSaveFailed
     }
 
@@ -275,5 +258,8 @@ class MainViewModel(
         private const val INTERVAL = 1000L
         private const val NAME_FILE = "temperatures.csv"
         private const val MIME_TYPE = "*/txt"
+
+        private const val START_MONITORING = true
+        private const val STOP_MONITORING = false
     }
 }

@@ -1,13 +1,10 @@
 package info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.screens
 
-import android.Manifest
 import android.content.ContentResolver
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.DefaultLifecycleObserver
@@ -39,26 +36,18 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
         )[MainViewModel::class.java]
     }
 
-
-    private var _binding: ActivityMainBinding? = null
-    private val binding: ActivityMainBinding
-        get() = _binding ?: throw RuntimeException("ActivityMainBinding equal null")
+    private val binding by lazy {
+        ActivityMainBinding.inflate(layoutInflater)
+    }
 
     private var isMonitoring = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super<AppCompatActivity>.onCreate(savedInstanceState)
-        _binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-//        checkWritePermissionA()
 
         initHideOfScroll()
         initSwitch()
-
-        viewModel.checkWritePermission = {
-            checkWritePermission()
-        }
 
         // get extras from ForegroundService
         val extras = intent.extras
@@ -96,10 +85,11 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
         viewModel.cycleForMonitor.observe(this) {
             isMonitoring = it
 
-            binding.swStartStop.isChecked = it
-
             if (it) lifecycle.addObserver(this)
             else lifecycle.removeObserver(this)
+        }
+        viewModel.startStatusMonitorLV.observe(this) {
+            binding.swStartStop.isChecked = it
         }
 
         // OnClickListeners
@@ -114,16 +104,14 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
             )
         }
         binding.butSaveFile.setOnClickListener {
-            viewModel.saveToFileCsv()
+            viewModel.saveFileStart()
         }
         binding.swStartStop.setOnCheckedChangeListener { _, isChecked ->
             viewModel.setMonitorMode(isChecked)
             if (!isChecked) {
-                with(binding) {
-                    tvTimeMonitoring.text = getString(
-                        R.string.monitoring_stopped
-                    )
-                }
+                binding.tvTimeMonitoring.text = getString(
+                    R.string.monitoring_stopped
+                )
             }
         }
     }
@@ -181,35 +169,6 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
         startService(stopIntent)
     }
 
-    private fun checkWritePermission() {
-        if (ContextCompat.checkSelfPermission(
-                applicationContext,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE
-            )
-            != PackageManager.PERMISSION_GRANTED
-        ) {
-            ActivityCompat.requestPermissions(
-                this,
-                arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
-                REQUEST_CODE_WRITE_EXTERNAL_STORAGE
-            )
-        }
-    }
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == REQUEST_CODE_WRITE_EXTERNAL_STORAGE &&
-            permissions[0] == Manifest.permission.WRITE_EXTERNAL_STORAGE &&
-            grantResults[0] == PackageManager.PERMISSION_GRANTED
-        ) {
-            viewModel.saveFileBellowQ()
-        }
-    }
-
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
@@ -221,12 +180,12 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
                         Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
             ) ?: throw RuntimeException("Not available folderUri")
 
-            //uri каталога, в который будет разрешена запись
+            //uri of the directory that will be writable
             val folderUri: Uri = data.data ?: throw RuntimeException("Not available folderUri")
 
             contentResolver.takePersistableUriPermission(folderUri, takeFlags)
             val pickedDir = DocumentFile.fromTreeUri(this, folderUri)
-            viewModel.saveFileFromQEnd(pickedDir, contentResolver)
+            viewModel.saveFileEnd(pickedDir, contentResolver)
         }
     }
 
@@ -239,7 +198,6 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
     }
 
     companion object {
-        const val REQUEST_CODE_WRITE_EXTERNAL_STORAGE = 101
         const val REQUEST_CODE_WRITE_STORAGE_SDK_FROM_Q = 111
         const val END_OF_LINE = "\n"
         const val SPACE = " "

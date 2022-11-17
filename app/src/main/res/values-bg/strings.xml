@@ -18,5 +18,4 @@
     <string name="stop">ИЗКЛ</string>
     <string name="start">НА</string>
     <string name="monitoring_stopped">Контролът спря.\n</string>
-    <string name="csv_file_saved_csv_directory">Файлът temperatures.csv се записва в директорията CSV_FILE.</string>
 </resources>

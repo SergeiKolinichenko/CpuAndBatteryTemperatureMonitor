@@ -17,6 +17,5 @@
     <string name="stop">OFF</string>
     <string name="start">ON</string>
     <string name="monitoring_stopped">Monitoring stopped.\n</string>
-    <string name="csv_file_saved_csv_directory">The temperatures.csv file is saved in the CSV_FILE directory.</string>
 
 </resources>
