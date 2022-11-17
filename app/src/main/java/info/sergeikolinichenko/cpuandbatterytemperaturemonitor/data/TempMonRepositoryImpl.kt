@@ -38,14 +38,21 @@ class TempMonRepositoryImpl(application: Application) : TempMonRepository {
         return listOfTemps
     }
 
-    override fun setStartStopMonitor(mode: Boolean) {
+    override fun setStateMonitoring(mode: Boolean) {
         preferences.edit().putBoolean(MODE_MONITORING, mode).apply()
     }
 
-    override fun getStartStopMonitor() = preferences.getBoolean(MODE_MONITORING, false)
+    override fun getStateMonitoring() = preferences.getBoolean(MODE_MONITORING, false)
+
+    override fun setTimeStartMonitoring(timeStamp: Long) {
+        preferences.edit().putLong(TIME_START_MONITORING, timeStamp).apply()
+    }
+
+    override fun getTimeStartMonitoring() = preferences.getLong(TIME_START_MONITORING, -1)
 
     companion object {
         private const val MODE_MONITORING = "MODE_MONITORING"
+        private const val TIME_START_MONITORING = "TIME_START_MONITORING"
     }
 
 }

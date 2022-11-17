@@ -11,6 +11,8 @@ interface TempMonRepository {
     suspend fun addTemps(temps: Temps)
     suspend fun getAllTemps(): List<Temps>
     fun getAllTempsLivedata(): LiveData<List<Temps>>
-    fun setStartStopMonitor(mode: Boolean)
-    fun getStartStopMonitor(): Boolean
+    fun setStateMonitoring(mode: Boolean)
+    fun getStateMonitoring(): Boolean
+    fun setTimeStartMonitoring(timeStamp: Long)
+    fun getTimeStartMonitoring(): Long
 }

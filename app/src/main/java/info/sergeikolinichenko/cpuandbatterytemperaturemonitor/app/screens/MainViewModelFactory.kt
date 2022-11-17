@@ -20,8 +20,10 @@ class MainViewModelFactory(application: Application) : ViewModelProvider.Factory
     private val getAllTemps = GetAllTemps(repository)
     private val getAllTempsLiveData = GetAllTempsLiveData(repository)
 
-    private val setMonitorStartStop = SetMonitorStartStop(repository)
-    private val getMonitorStartStop = GetMonitorStartStop(repository)
+    private val setMonitorStartStop = SetStateMonitoring(repository)
+    private val getMonitorStartStop = GetStateMonitoring(repository)
+    private val setTimeStartMonitoring = SetTimeStartMonitoring(repository)
+    private val getTimeStartMonitoring = GetTimeStartMonitoring(repository)
 
     private val registerReceiver = application.registerReceiver(
         null,
@@ -38,7 +40,9 @@ class MainViewModelFactory(application: Application) : ViewModelProvider.Factory
                 addTemps,
                 getAllTemps,
                 setMonitorStartStop,
-                getMonitorStartStop
+                getMonitorStartStop,
+                setTimeStartMonitoring,
+                getTimeStartMonitoring
             ) as T
         } else throw RuntimeException("Unknown view Model class $modelClass")
     }

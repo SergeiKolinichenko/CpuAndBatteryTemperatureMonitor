@@ -1,6 +1,8 @@
 package info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.screens
 
+import android.app.ActivityManager
 import android.content.ContentResolver
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -49,16 +51,10 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
         initHideOfScroll()
         initSwitch()
 
-        // get extras from ForegroundService
-        val extras = intent.extras
-        extras?.let {
-            if (
-                extras.containsKey(START_MONITORING)
-                &&
-                extras.getLong(START_MONITORING) > 0
-            ) {
-                viewModel.setTimeStartMonitoring(extras.getLong(START_MONITORING))
-            }
+        if (isMyServiceRunning(ForegroundService::class.java)) {
+            viewModel.getStartMonitoringTime()
+        } else {
+            getStartTimeMonitoring(intent) // get extras from ForegroundService
         }
 
         // Observers
@@ -72,23 +68,23 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
         viewModel.message.observe(this) {
             ShowSnakebar.showSnakebar(binding.root, binding.bab, getString(it))
         }
-        viewModel.timeMonitoring.observe(this) {
+        viewModel.monitoringDuration.observe(this) {
             if (isMonitoring) {
                 binding.tvTimeMonitoring.text =
                     getString(
                         R.string.screen_title_string,
-                        viewModel.startMonitoring.getFullDate(),
+                        viewModel.monitoringStartTime.getFullDate(),
                         it.differenceInTime()
                     )
             }
         }
-        viewModel.cycleForMonitor.observe(this) {
+        viewModel.onOffMonitoringCycle.observe(this) {
             isMonitoring = it
 
             if (it) lifecycle.addObserver(this)
             else lifecycle.removeObserver(this)
         }
-        viewModel.startStatusMonitorLV.observe(this) {
+        viewModel.monitoringStatusLiveData.observe(this) {
             binding.swStartStop.isChecked = it
         }
 
@@ -112,6 +108,19 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
                 binding.tvTimeMonitoring.text = getString(
                     R.string.monitoring_stopped
                 )
+            }
+        }
+    }
+
+    private fun getStartTimeMonitoring(intent: Intent) {
+        val extras = intent.extras
+        extras?.let {
+            if (
+                extras.containsKey(START_MONITORING)
+                &&
+                extras.getLong(START_MONITORING) > 0
+            ) {
+                viewModel.setStartMonitoringTime(extras.getLong(START_MONITORING))
             }
         }
     }
@@ -158,7 +167,7 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
     override fun onStop(owner: LifecycleOwner) {
         val startIntent = Intent(this, ForegroundService::class.java)
         startIntent.putExtra(COMMAND_ID, COMMAND_START)
-        startIntent.putExtra(START_MONITORING, viewModel.startMonitoring)
+        startIntent.putExtra(START_MONITORING, viewModel.monitoringStartTime)
         startService(startIntent)
     }
 
@@ -167,6 +176,17 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
         stopIntent.putExtra(COMMAND_ID, COMMAND_STOP)
         stopIntent.putExtra(START_MONITORING, START_MONITORING_ERROR)
         startService(stopIntent)
+    }
+
+    private fun isMyServiceRunning(serviceClass: Class<*>): Boolean {
+        val manager = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+
+        for (service in manager.getRunningServices(Int.MAX_VALUE)) {
+            if (serviceClass.name.equals(service.service.className)) {
+                return true
+            }
+        }
+        return false
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

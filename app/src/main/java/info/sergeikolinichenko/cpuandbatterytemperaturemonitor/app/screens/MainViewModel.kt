@@ -31,8 +31,10 @@ class MainViewModel(
     private val clearDb: ClearDb,
     private val addTemps: AddTemps,
     private val getAllTemps: GetAllTemps,
-    private val setMonitorStartStop: SetMonitorStartStop,
-    getMonitorStartStop: GetMonitorStartStop,
+    private val setMonitorStartStop: SetStateMonitoring,
+    getMonitorStartStop: GetStateMonitoring,
+    private val setTimeStartMonitoring: SetTimeStartMonitoring,
+    private val getTimeStartMonitoring: GetTimeStartMonitoring
 ) : ViewModel() {
 
     val tempsLiveData: LiveData<List<Temps>> = getAllTempsLiveData()
@@ -49,21 +51,22 @@ class MainViewModel(
     val intent: LiveData<Intent>
         get() = _intent
 
-    private var _cycleForMonitor = MutableLiveData<Boolean>()
-    val cycleForMonitor: LiveData<Boolean>
-        get() = _cycleForMonitor
-    private val monStart: Boolean
-        get() = cycleForMonitor.value ?: false
+    private var _onOffMonitoringCycle = MutableLiveData<Boolean>()
+    val onOffMonitoringCycle: LiveData<Boolean>
+        get() = _onOffMonitoringCycle
 
-    val startStatusMonitorLV = MutableLiveData(getMonitorStartStop())
-    private val startStatusMonitor
-        get() = startStatusMonitorLV.value ?: false
+    val monitoringStatusLiveData = MutableLiveData(getMonitorStartStop())
+    private val monitoringStatus
+        get() = monitoringStatusLiveData.value ?: false
 
     // Temperature monitoring start
-    var startMonitoring = System.currentTimeMillis()
-    private var _timeMonitoring = MutableLiveData<Long>()
-    val timeMonitoring: LiveData<Long>
-        get() = _timeMonitoring
+    private var _monitoringStartTime = System.currentTimeMillis()
+    val monitoringStartTime: Long
+        get() = _monitoringStartTime
+
+    private var _monitoringDuration = MutableLiveData<Long>()
+    val monitoringDuration: LiveData<Long>
+        get() = _monitoringDuration
 
     private var stateMonitoring = false
 
@@ -72,20 +75,49 @@ class MainViewModel(
     private val stringDataBaseCleared = R.string.database_cleared
 
     init {
-        statusMonitoring(startStatusMonitor)
-        getStartMonitoringTime()
+        setMonitoringStatus(monitoringStatus)
     }
 
-    fun setTimeStartMonitoring(time: Long) {
-        startMonitoring = time
-        getStartMonitoringTime()
+    fun setStartMonitoringTime(time: Long) {
+        _monitoringStartTime = time
+        setTimeStartMonitoring.invoke(monitoringStartTime)
     }
 
-    private fun getStartMonitoringTime() {
-        _timeMonitoring.value = startMonitoring
+    fun getStartMonitoringTime() {
+        val start = getTimeStartMonitoring.invoke()
+        _monitoringStartTime = if (start > -1) {
+            start
+        } else {
+            System.currentTimeMillis()
+        }
+    }
+
+    fun setMonitorMode(mode: Boolean) {
+        setMonitoringStatus(mode)
+        if (mode) {
+            clearDatabase()
+        }
+        setMonitorStartStop.invoke(mode)
+    }
+
+    private fun setMonitoringStatus(status: Boolean) {
+        _onOffMonitoringCycle.value = status
+        if (status) {
+            getTemperatures()
+        }
+    }
+
+    fun clearDatabase() {
+        viewModelScope.launch {
+            clearDb.invoke()
+        }
+        val timeStamp = System.currentTimeMillis()
+        setStartMonitoringTime(timeStamp)
+        _message.value = stringDataBaseCleared
     }
 
     private fun getTemperatures() {
+        val monStart = onOffMonitoringCycle.value ?: false
         viewModelScope.launch {
             while (monStart) {
                 val timeStamp = System.currentTimeMillis()
@@ -97,7 +129,7 @@ class MainViewModel(
                     tempBat
                 )
                 addTemps.invoke(temps)
-                _timeMonitoring.value = timeStamp - startMonitoring
+                _monitoringDuration.value = timeStamp - monitoringStartTime
                 delay(INTERVAL)
             }
         }
@@ -171,35 +203,9 @@ class MainViewModel(
         }
     }
 
-    fun clearDatabase() {
-        viewModelScope.launch {
-            clearDb.invoke()
-        }
-
-        startMonitoring = System.currentTimeMillis()
-        getStartMonitoringTime()
-
-        _message.value = stringDataBaseCleared
-    }
-
-    fun setMonitorMode(mode: Boolean) {
-        statusMonitoring(mode)
-        if (mode) {
-            clearDatabase()
-        }
-        setMonitorStartStop.invoke(mode)
-    }
-
-    private fun statusMonitoring(status: Boolean) {
-        _cycleForMonitor.value = status
-        if (status) {
-            getTemperatures()
-        }
-    }
-
     fun saveFileStart() {
-        stateMonitoring = cycleForMonitor.value ?: false // save monitoring status
-        statusMonitoring(STOP_MONITORING)               // stop monitoring
+        stateMonitoring = onOffMonitoringCycle.value ?: false // save monitoring status
+        setMonitoringStatus(STOP_MONITORING)               // stop monitoring
 
         viewModelScope.launch {
             _temps = getAllTemps.invoke()
@@ -229,7 +235,7 @@ class MainViewModel(
         os.use {
             result = outputDataWrite(osw)
         }
-        statusMonitoring(stateMonitoring)           // restore monitoring status
+        setMonitoringStatus(stateMonitoring)           // restore monitoring status
         _message.value = if (result) stringFileSaved
         else stringFileSaveFailed
     }
@@ -258,8 +264,6 @@ class MainViewModel(
         private const val INTERVAL = 1000L
         private const val NAME_FILE = "temperatures.csv"
         private const val MIME_TYPE = "*/txt"
-
-        private const val START_MONITORING = true
         private const val STOP_MONITORING = false
     }
 }

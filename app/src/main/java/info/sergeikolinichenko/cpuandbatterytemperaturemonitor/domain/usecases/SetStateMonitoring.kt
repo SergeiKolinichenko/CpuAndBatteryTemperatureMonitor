@@ -4,10 +4,10 @@ import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.domain.TempMonRep
 
 /** Created by Sergei Kolinichenko on 11.11.2022 at 15:10 (GMT+3) **/
 
-class SetMonitorStartStop(private val repository: TempMonRepository) {
+class SetStateMonitoring(private val repository: TempMonRepository) {
 
     operator fun invoke(mode: Boolean) {
-        repository.setStartStopMonitor(mode)
+        repository.setStateMonitoring(mode)
     }
 
 }
