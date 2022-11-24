@@ -1,10 +1,11 @@
 package info.sergeikolinichenko.cpuandbatterytemperaturemonitor.data.dbmodels
 
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.domain.models.Temps
+import javax.inject.Inject
 
 /** Created by Sergei Kolinichenko on 25.10.2022 at 07:59 (GMT+3) **/
 
-class TempsMapper {
+class TempsMapper @Inject constructor(){
 
     fun mapEntityToDbModel(temps: Temps) = TempsDbModels(
         timeStamp = temps.timeStamp,

@@ -76,5 +76,8 @@ dependencies {
     // optional - Paging 3 Integration
     androidTestImplementation "androidx.room:room-testing:$room_version"
 
+    // Dagger 2
+    implementation 'com.google.dagger:dagger:2.43.2'
+    kapt 'com.google.dagger:dagger-compiler:2.43.2'
 
 }

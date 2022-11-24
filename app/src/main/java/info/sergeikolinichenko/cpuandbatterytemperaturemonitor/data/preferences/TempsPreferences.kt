@@ -6,7 +6,7 @@ import android.content.SharedPreferences
 
 /** Created by Sergei Kolinichenko on 11.11.2022 at 15:05 (GMT+3) **/
 
-abstract class SharedPreferences {
+abstract class TempsPreferences {
 
     companion object {
         const val SHARED_PREFS_NAME = "shared_preferences"

@@ -1,22 +1,21 @@
 package info.sergeikolinichenko.cpuandbatterytemperaturemonitor.data
 
-import android.app.Application
+import android.content.SharedPreferences
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Transformations
-import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.data.database.AppDatabase
+import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.data.database.TempsDao
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.data.dbmodels.TempsMapper
-import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.data.preferences.SharedPreferences
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.domain.TempMonRepository
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.domain.models.Temps
+import javax.inject.Inject
 
 /** Created by Sergei Kolinichenko on 25.10.2022 at 07:52 (GMT+3) **/
 
-class TempMonRepositoryImpl(application: Application) : TempMonRepository {
-
-    private val dao = AppDatabase.getInstance(application).tempsDao()
-    private val mapper = TempsMapper()
-
-    private val preferences = SharedPreferences.getInstance(application)
+class TempMonRepositoryImpl @Inject constructor(
+    private val dao: TempsDao,
+    private val preferences: SharedPreferences,
+    private val mapper: TempsMapper
+) : TempMonRepository {
 
     override suspend fun clearDb() {
         dao.clearDatabase()

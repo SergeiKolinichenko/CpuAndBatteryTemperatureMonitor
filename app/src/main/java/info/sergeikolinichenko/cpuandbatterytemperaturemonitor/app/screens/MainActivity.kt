@@ -18,19 +18,26 @@ import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.ForegroundSer
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.ForegroundService.Companion.COMMAND_START
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.ForegroundService.Companion.COMMAND_STOP
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.ForegroundService.Companion.ITEM_SEPARATOR
-import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.ForegroundService.Companion.START_MONITORING
+import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.ForegroundService.Companion.START_MONITOR
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.ForegroundService.Companion.START_MONITORING_ERROR
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.ForegroundService.Companion.STRING_SEPARATOR
+import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.TempsApp
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.utils.ShowSnakebar
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.utils.TimeUtils.differenceInTime
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.utils.TimeUtils.getFullDate
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.databinding.ActivityMainBinding
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.domain.models.Temps
+import javax.inject.Inject
 
 
 class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
 
-    private val viewModelFactory by lazy { MainViewModelFactory(application) }
+    private val binding by lazy {
+        ActivityMainBinding.inflate(layoutInflater)
+    }
+
+    @Inject
+    lateinit var viewModelFactory: MainViewModelFactory
     private val viewModel by lazy {
         ViewModelProvider(
             this,
@@ -38,13 +45,14 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
         )[MainViewModel::class.java]
     }
 
-    private val binding by lazy {
-        ActivityMainBinding.inflate(layoutInflater)
+    private val component by lazy {
+        (application as TempsApp).component
     }
 
-    private var isMonitoring = false
+    private var monitorOn = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        component.inject(this)
         super<AppCompatActivity>.onCreate(savedInstanceState)
         setContentView(binding.root)
 
@@ -52,7 +60,7 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
         initSwitch()
 
         if (isMyServiceRunning(ForegroundService::class.java)) {
-            viewModel.getStartMonitoringTime()
+            viewModel.getStartMonitorTime()
         } else {
             getStartTimeMonitoring(intent) // get extras from ForegroundService
         }
@@ -60,7 +68,10 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
         // Observers
         viewModel.tempsLiveData.observe(this) {
             binding.tvTitle.text = getSplitString(it, STRING_OF_TITLE)
-            binding.tvTemp.text = getSplitString(it, STRING_OF_TEMP)
+
+            if (monitorOn) {
+                binding.tvTemp.text = getSplitString(it, STRING_OF_TEMP)
+            }
         }
         viewModel.intent.observe(this) {
             startActivityForResult(it, REQUEST_CODE_WRITE_STORAGE_SDK_FROM_Q)
@@ -68,23 +79,30 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
         viewModel.message.observe(this) {
             ShowSnakebar.showSnakebar(binding.root, binding.bab, getString(it))
         }
-        viewModel.monitoringDuration.observe(this) {
-            if (isMonitoring) {
+        viewModel.monitorDuration.observe(this) {
+            if (monitorOn) {
                 binding.tvTimeMonitoring.text =
                     getString(
                         R.string.screen_title_string,
-                        viewModel.monitoringStartTime.getFullDate(),
+                        viewModel.monitorStartTime.getFullDate(),
                         it.differenceInTime()
                     )
             }
         }
-        viewModel.onOffMonitoringCycle.observe(this) {
-            isMonitoring = it
+        viewModel.monitorCycleOnOff.observe(this) {
+            monitorOn = it
+
+            if (!monitorOn) {
+                binding.tvTimeMonitoring.text = getString(
+                    R.string.monitor_stopped
+                )
+                binding.tvTemp.text = ""
+            }
 
             if (it) lifecycle.addObserver(this)
             else lifecycle.removeObserver(this)
         }
-        viewModel.monitoringStatusLiveData.observe(this) {
+        viewModel.monitorStatStartLD.observe(this) {
             binding.swStartStop.isChecked = it
         }
 
@@ -104,11 +122,6 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
         }
         binding.swStartStop.setOnCheckedChangeListener { _, isChecked ->
             viewModel.setMonitorMode(isChecked)
-            if (!isChecked) {
-                binding.tvTimeMonitoring.text = getString(
-                    R.string.monitoring_stopped
-                )
-            }
         }
     }
 
@@ -116,11 +129,11 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
         val extras = intent.extras
         extras?.let {
             if (
-                extras.containsKey(START_MONITORING)
+                extras.containsKey(START_MONITOR)
                 &&
-                extras.getLong(START_MONITORING) > 0
+                extras.getLong(START_MONITOR) > 0
             ) {
-                viewModel.setStartMonitoringTime(extras.getLong(START_MONITORING))
+                viewModel.setStartMonitorTime(extras.getLong(START_MONITOR))
             }
         }
     }
@@ -167,14 +180,14 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
     override fun onStop(owner: LifecycleOwner) {
         val startIntent = Intent(this, ForegroundService::class.java)
         startIntent.putExtra(COMMAND_ID, COMMAND_START)
-        startIntent.putExtra(START_MONITORING, viewModel.monitoringStartTime)
+        startIntent.putExtra(START_MONITOR, viewModel.monitorStartTime)
         startService(startIntent)
     }
 
     override fun onStart(owner: LifecycleOwner) {
         val stopIntent = Intent(this, ForegroundService::class.java)
         stopIntent.putExtra(COMMAND_ID, COMMAND_STOP)
-        stopIntent.putExtra(START_MONITORING, START_MONITORING_ERROR)
+        stopIntent.putExtra(START_MONITOR, START_MONITORING_ERROR)
         startService(stopIntent)
     }
 

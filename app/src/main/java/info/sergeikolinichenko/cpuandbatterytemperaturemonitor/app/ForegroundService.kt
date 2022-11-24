@@ -15,12 +15,12 @@ import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.R
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.screens.MainActivity
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.utils.TimeUtils.differenceInTime
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.utils.TimeUtils.getFullDate
-import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.data.TempMonRepositoryImpl
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.domain.models.Temps
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.domain.usecases.AddTemps
 import kotlinx.coroutines.*
 import java.io.BufferedReader
 import java.io.FileReader
+import javax.inject.Inject
 
 /** Created by Sergei Kolinichenko on 25.10.2022 at 10:52 (GMT+3) **/
 
@@ -30,8 +30,13 @@ class ForegroundService : Service() {
     private var startMonitoring: Long = START_MONITORING_ERROR
     private var notificationManager: NotificationManager? = null
     private var job: Job? = null
-    private val repository by lazy { TempMonRepositoryImpl(application) }
-    private val addTemps by lazy { AddTemps(repository) }
+
+    @Inject
+    lateinit var addTemps: AddTemps
+
+    private val component by lazy {
+        (application as TempsApp).component
+    }
 
     private val builder by lazy {
         NotificationCompat.Builder(this, CHANNEL_ID)
@@ -46,7 +51,9 @@ class ForegroundService : Service() {
     }
 
     override fun onCreate() {
+        component.inject(this)
         super.onCreate()
+
         notificationManager =
             applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as?
                     NotificationManager
@@ -55,9 +62,9 @@ class ForegroundService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 
         intent?.let {
-            if (intent.hasExtra(START_MONITORING) && startMonitoring == START_MONITORING_ERROR) {
+            if (intent.hasExtra(START_MONITOR) && startMonitoring == START_MONITORING_ERROR) {
                 startMonitoring = intent.getLongExtra(
-                    START_MONITORING,
+                    START_MONITOR,
                     START_MONITORING_ERROR
                 )
             }
@@ -243,7 +250,7 @@ class ForegroundService : Service() {
             MainActivity::class.java
         )
         resultIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP //Intent.FLAG_ACTIVITY_NEW_TASK
-        resultIntent.putExtra(START_MONITORING, startMonitoring)
+        resultIntent.putExtra(START_MONITOR, startMonitoring)
         return PendingIntent.getActivity(
             this,
             REQUEST_CODE_START_MONITORING,
@@ -261,7 +268,7 @@ class ForegroundService : Service() {
         const val COMMAND_START = "COMMAND_START"
         const val COMMAND_STOP = "COMMAND_STOP"
         const val COMMAND_ID = "COMMAND_ID"
-        const val START_MONITORING = "START_MONITORING"
+        const val START_MONITOR = "START_MONITORING"
         const val START_MONITORING_ERROR = -1L
         const val REQUEST_CODE_START_MONITORING = 222
 

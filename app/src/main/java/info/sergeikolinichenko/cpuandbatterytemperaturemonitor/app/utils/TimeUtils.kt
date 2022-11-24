@@ -19,12 +19,10 @@ object TimeUtils {
     }
 
     fun Long.differenceInTime(): String {
-        return String.format(
-            "%d %02d:%02d:%02d",
-            this / 1000 / 3600 / 24,
-            this / 1000 / 3600,
-            this / 1000 / 60 % 60,
-            this / 1000 % 60
-        )
+        val seconds = this / 1000 % 60
+        val minutes = this / 1000 / 60 % 60
+        val hours = this / 1000 / 60 / 60 % 24
+        val days = this / 1000 / 60 / 60 / 24
+        return String.format( "%d %02d:%02d:%02d", days, hours, minutes, seconds )
     }
 }
