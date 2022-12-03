@@ -17,5 +17,6 @@
     <string name="stop">OFF</string>
     <string name="start">ON</string>
     <string name="monitor_stopped">Monitoring stopped.\n</string>
+    <string name="monitiring_possible_not_possible">Sorry, reading the temperature parameters on this device using the current version of the program is not yet possible. Try again after the next update of the program to the next version.</string>
 
 </resources>

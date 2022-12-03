@@ -18,4 +18,5 @@
     <string name="stop">ИЗКЛ</string>
     <string name="start">НА</string>
     <string name="monitor_stopped">Контролът спря.\n</string>
+    <string name="monitiring_possible_not_possible">За съжаление, четенето на температурните параметри на това устройство с текущата версия на програмата все още не е възможно. Опитайте отново след следващото обновяване на програмата до следващата версия.</string>
 </resources>

@@ -12,8 +12,6 @@ import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.R
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.ForegroundService.Companion.ITEM_SEPARATOR
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.ForegroundService.Companion.NUMBER_OF_DATA_READ_CYCLES
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.ForegroundService.Companion.STRING_SEPARATOR
-import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.screens.MainActivity.Companion.END_OF_LINE
-import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.screens.MainActivity.Companion.SPACE
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.utils.TimeUtils.getFullDate
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.domain.models.Temps
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.domain.usecases.*
@@ -62,6 +60,10 @@ class MainViewModel @Inject constructor(
     private val monitorStatStart
         get() = monitorStatStartLD.value ?: false
 
+    private var _errorApp = MutableLiveData(false)
+    val errorApp: LiveData<Boolean>
+        get() = _errorApp
+
     // Temperature monitoring start
     private var _monitorStartTime = System.currentTimeMillis()
     val monitorStartTime: Long
@@ -97,9 +99,9 @@ class MainViewModel @Inject constructor(
 
     fun setMonitorMode(mode: Boolean) {
         setMonitorStatus(mode)
-        if (mode) {
-            clearDatabase()
-        }
+//        if (mode) {
+//            clearDatabase()
+//        }
         setMonitorStartStop.invoke(mode)
     }
 
@@ -125,6 +127,10 @@ class MainViewModel @Inject constructor(
                 val timeStamp = System.currentTimeMillis()
                 val tempCpu = getTempCpu()
                 val tempBat = getTempBat()
+                if (tempCpu == EMPTY_STRING) {
+                    errorApp()
+                    return@launch
+                }
                 val temps = Temps(
                     timeStamp,
                     tempCpu,
@@ -137,6 +143,11 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    private fun errorApp() {
+        _monitorCycleOnOff.value = false
+        _errorApp.value = true
+    }
+
     private fun getTempBat(): String {
         val intent = registerReceiver
         return (intent?.getIntExtra(
@@ -146,7 +157,7 @@ class MainViewModel @Inject constructor(
     }
 
     private fun getTempCpu(): String {
-        var tempCpu = ""
+        var tempCpu = EMPTY_STRING
         for (count in 0 until NUMBER_OF_DATA_READ_CYCLES) {
             val temp = getTemp(count)
             val type = getType(count)
@@ -158,8 +169,10 @@ class MainViewModel @Inject constructor(
                 }
             }
         }
-        val lastIndex = tempCpu.lastIndexOf(STRING_SEPARATOR)
-        tempCpu = tempCpu.substring(0, lastIndex)
+        if (tempCpu != "") {
+            val lastIndex = tempCpu.lastIndexOf(STRING_SEPARATOR)
+            tempCpu = tempCpu.substring(0, lastIndex)
+        }
         return tempCpu
     }
 
@@ -223,7 +236,11 @@ class MainViewModel @Inject constructor(
 
     }
 
-    fun saveFileEnd(file: DocumentFile?, cr: ContentResolver) {
+    fun saveFileEnd(file: DocumentFile?, cr: ContentResolver?, resultOk: Boolean) {
+        if (!resultOk) {
+            _message.value = stringFileSaveFailed
+            return
+        }
         var result: Boolean
         var myFile = file?.findFile(NAME_FILE)
         if (myFile != null) {
@@ -234,7 +251,7 @@ class MainViewModel @Inject constructor(
         } else {
             myFile = file?.createFile(MIME_TYPE, NAME_FILE)
         }
-        val os = myFile?.let { cr.openOutputStream(it.uri) }
+        val os = myFile?.let { cr?.openOutputStream(it.uri) }
         val osw = OutputStreamWriter(os)
         os.use {
             result = outputDataWrite(osw)
@@ -273,5 +290,10 @@ class MainViewModel @Inject constructor(
         private const val NAME_FILE = "temperatures.csv"
         private const val MIME_TYPE = "*/txt"
         private const val STOP_MONITORING = false
+        private const val EMPTY_STRING = ""
+        const val END_OF_LINE = "\n"
+        const val SPACE = " "
+        const val ACTIVITY_FOR_RESULT_OK = true
+        const val ACTIVITY_FOR_RESULT_FAIL = false
     }
 }

@@ -18,4 +18,5 @@
     <string name="stop">ВЫКЛ</string>
     <string name="start">ВКЛ</string>
     <string name="monitor_stopped">Контроль остановлен.\n</string>
+    <string name="monitiring_possible_not_possible">Извините, считывание параметров температуры на этом устройстве с помощью текущей версии программы пока не представляется возможным. Попробуйте ещё раз после очередного обновления программы до следующей версии.</string>
 </resources>

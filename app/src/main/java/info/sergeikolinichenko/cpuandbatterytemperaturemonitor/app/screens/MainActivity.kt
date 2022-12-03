@@ -22,6 +22,10 @@ import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.ForegroundSer
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.ForegroundService.Companion.START_MONITORING_ERROR
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.ForegroundService.Companion.STRING_SEPARATOR
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.TempsApp
+import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.screens.MainViewModel.Companion.ACTIVITY_FOR_RESULT_FAIL
+import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.screens.MainViewModel.Companion.ACTIVITY_FOR_RESULT_OK
+import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.screens.MainViewModel.Companion.END_OF_LINE
+import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.screens.MainViewModel.Companion.SPACE
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.utils.ShowSnakebar
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.utils.TimeUtils.differenceInTime
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.utils.TimeUtils.getFullDate
@@ -58,14 +62,31 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
 
         initHideOfScroll()
         initSwitch()
+        initObserveApp()
+        initOnClickListenersApp()
 
         if (isMyServiceRunning(ForegroundService::class.java)) {
             viewModel.getStartMonitorTime()
         } else {
             getStartTimeMonitoring(intent) // get extras from ForegroundService
         }
+    }
 
-        // Observers
+    private fun getStartTimeMonitoring(intent: Intent) {
+        val extras = intent.extras
+        extras?.let {
+            if (
+                extras.containsKey(START_MONITOR)
+                &&
+                extras.getLong(START_MONITOR) > 0
+            ) {
+                viewModel.setStartMonitorTime(extras.getLong(START_MONITOR))
+            }
+        }
+    }
+
+    // Observers
+    private fun initObserveApp() {
         viewModel.tempsLiveData.observe(this) {
             binding.tvTitle.text = getSplitString(it, STRING_OF_TITLE)
 
@@ -105,8 +126,16 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
         viewModel.monitorStatStartLD.observe(this) {
             binding.swStartStop.isChecked = it
         }
+        viewModel.errorApp.observe(this) {
+            if (it) {
+                binding.tvTitle.text = getString(R.string.monitiring_possible_not_possible)
+                lifecycle.removeObserver(this)
+            }
+        }
+    }
 
-        // OnClickListeners
+    // OnClickListeners
+    private fun initOnClickListenersApp() {
         binding.butClearDb.setOnClickListener {
 
             ShowSnakebar.showActionSnakebar(
@@ -122,19 +151,6 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
         }
         binding.swStartStop.setOnCheckedChangeListener { _, isChecked ->
             viewModel.setMonitorMode(isChecked)
-        }
-    }
-
-    private fun getStartTimeMonitoring(intent: Intent) {
-        val extras = intent.extras
-        extras?.let {
-            if (
-                extras.containsKey(START_MONITOR)
-                &&
-                extras.getLong(START_MONITOR) > 0
-            ) {
-                viewModel.setStartMonitorTime(extras.getLong(START_MONITOR))
-            }
         }
     }
 
@@ -205,21 +221,21 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
-        if (requestCode == REQUEST_CODE_WRITE_STORAGE_SDK_FROM_Q) {
+        if (requestCode == REQUEST_CODE_WRITE_STORAGE_SDK_FROM_Q && data != null) {
             val contentResolver: ContentResolver = contentResolver
 
-            val takeFlags = data?.flags?.and(
+            val takeFlags = data.flags.and(
                 (Intent.FLAG_GRANT_READ_URI_PERMISSION or
                         Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
-            ) ?: throw RuntimeException("Not available folderUri")
+            )
 
             //uri of the directory that will be writable
             val folderUri: Uri = data.data ?: throw RuntimeException("Not available folderUri")
 
             contentResolver.takePersistableUriPermission(folderUri, takeFlags)
             val pickedDir = DocumentFile.fromTreeUri(this, folderUri)
-            viewModel.saveFileEnd(pickedDir, contentResolver)
-        }
+            viewModel.saveFileEnd(pickedDir, contentResolver, ACTIVITY_FOR_RESULT_OK)
+        } else viewModel.saveFileEnd(null, null, ACTIVITY_FOR_RESULT_FAIL)
     }
 
     private fun initHideOfScroll() {
@@ -231,9 +247,7 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
     }
 
     companion object {
-        const val REQUEST_CODE_WRITE_STORAGE_SDK_FROM_Q = 111
-        const val END_OF_LINE = "\n"
-        const val SPACE = " "
+        private const val REQUEST_CODE_WRITE_STORAGE_SDK_FROM_Q = 111
         private const val STRING_OF_TITLE = "title_string"
         private const val STRING_OF_TEMP = "temperature"
         private const val BATTERY = "Battery"
