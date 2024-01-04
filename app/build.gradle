@@ -10,7 +10,7 @@ android {
     defaultConfig {
         applicationId "info.sergeikolinichenko.cpuandbatterytemperaturemonitor"
         minSdk 23
-        targetSdk 33
+
         versionCode 2
         versionName "1.1"
 
