@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -10,7 +11,10 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:layout_gravity="top"
+        android:gravity="center"
+        >
 
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
@@ -30,7 +34,7 @@
                 android:layout_marginStart="5dp"
                 android:layout_marginEnd="5dp"
                 android:layout_marginBottom="5dp"
-                android:textColor="@color/black"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="14sp"
                 android:textStyle="bold"
                 tools:text="09.11.2022 16:01" />
@@ -68,10 +72,10 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="10dp"
                         android:layout_marginEnd="5dp"
-                        android:textColor="@color/black"
                         android:textSize="14sp"
                         android:textStyle="bold"
                         android:background="@android:color/transparent"
+                        android:textColor="?attr/colorOnSurface"
                         tools:text="CPU:" />
 
                     <View
@@ -85,10 +89,10 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="5dp"
                         android:layout_marginEnd="20dp"
-                        android:textColor="@color/black"
                         android:textSize="14sp"
                         android:textStyle="bold"
                         android:background="@android:color/transparent"
+                        android:textColor="?attr/colorOnSurface"
                         tools:text=" 37" />
 
                 </LinearLayout>
@@ -100,7 +104,7 @@
                         android:layout_marginTop="2dp"
                         android:layout_marginStart="5dp"
                         android:layout_marginEnd="5dp"
-                        android:textColor="@color/black"
+                        android:textColor="?attr/colorOnSurface"
                         android:textSize="14sp"
                         android:textStyle="bold" />
 
@@ -129,8 +133,6 @@
         app:backgroundTint="?attr/colorPrimaryVariant"
         app:contentInsetEnd="2dp"
         app:contentInsetStart="2dp"
-        app:fabAlignmentMode="end"
-        app:fabAlignmentModeEndMargin="5dp"
         app:layout_behavior=".app.utils.BottomAppBarBehavior">
 
         <LinearLayout
@@ -174,7 +176,7 @@
                         android:text="@string/stop"
                         android:layout_weight="1"
                         android:layout_marginStart="2dp"
-                        tools:text="OFF" />
+                        tools:text="@string/stop" />
 
                     <com.google.android.material.switchmaterial.SwitchMaterial
                         android:id="@+id/sw_start_stop"
@@ -190,7 +192,7 @@
                         android:text="@string/start"
                         android:layout_weight="1"
                         android:layout_marginEnd="2dp"
-                        tools:text="ON" />
+                        tools:text="@string/start" />
 
                 </LinearLayout>
             </LinearLayout>

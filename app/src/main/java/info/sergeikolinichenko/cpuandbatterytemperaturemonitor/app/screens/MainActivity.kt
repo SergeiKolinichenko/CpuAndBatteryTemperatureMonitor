@@ -56,6 +56,7 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
     private var monitorOn = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
         component.inject(this)
         super<AppCompatActivity>.onCreate(savedInstanceState)
         setContentView(binding.root)

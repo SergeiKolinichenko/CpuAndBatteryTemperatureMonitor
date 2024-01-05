@@ -26,6 +26,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <meta-data android:name="android.max_aspect" android:value="5.0"/>
         <service
             android:name=".app.ForegroundService"
             android:permission="android.permission.FOREGROUND_SERVICE" />

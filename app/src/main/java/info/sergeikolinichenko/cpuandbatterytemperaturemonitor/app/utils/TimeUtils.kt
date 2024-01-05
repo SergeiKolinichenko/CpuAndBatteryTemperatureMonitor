@@ -1,8 +1,7 @@
 package info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.utils
 
-import java.lang.StringBuilder
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Locale
 
 /** Created by Sergei Kolinichenko on 25.10.2022 at 10:34 (GMT+3) **/
 
@@ -25,4 +24,5 @@ object TimeUtils {
         val days = this / 1000 / 60 / 60 / 24
         return String.format( "%d %02d:%02d:%02d", days, hours, minutes, seconds )
     }
+
 }

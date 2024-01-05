@@ -2,7 +2,7 @@ package info.sergeikolinichenko.cpuandbatterytemperaturemonitor.data
 
 import android.content.SharedPreferences
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.Transformations
+import androidx.lifecycle.map
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.data.database.TempsDao
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.data.dbmodels.TempsMapper
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.domain.TempMonRepository
@@ -31,7 +31,7 @@ class TempMonRepositoryImpl @Inject constructor(
 
     override fun getAllTempsLivedata(): LiveData<List<Temps>> {
         val listOfTemps: LiveData<List<Temps>> =
-            Transformations.map(dao.getTempsLiveData()) {
+            dao.getTempsLiveData().map {
                 mapper.mapListDbModelToListEntity(it)
             }
         return listOfTemps
