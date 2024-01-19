@@ -220,8 +220,8 @@ class MainViewModel @Inject constructor(
 
     fun saveFileStart() {
         if (cycleOnOff) {
-            monitorState = cycleOnOff // save monitoring status
-            setMonitorStatus(STOP_MONITORING)               // stop monitoring
+            monitorState = cycleOnOff           // save monitoring status
+            setMonitorStatus(STOP_MONITORING)   // stop monitoring
         }
 
         viewModelScope.launch {
