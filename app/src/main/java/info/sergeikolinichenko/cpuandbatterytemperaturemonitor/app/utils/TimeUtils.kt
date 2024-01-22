@@ -13,7 +13,7 @@ object TimeUtils {
     }
 
     fun Long.getFullDate(): String {
-        val fullDateFormat = SimpleDateFormat("dd.MM.yy HH:mm", Locale.getDefault())
+        val fullDateFormat = SimpleDateFormat("dd.MM.yy HH:mm:ss", Locale.getDefault())
         return fullDateFormat.format(this)
     }
 

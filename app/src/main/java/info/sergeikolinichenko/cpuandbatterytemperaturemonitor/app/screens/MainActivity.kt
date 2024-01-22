@@ -1,12 +1,11 @@
 package info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.screens
 
-import android.app.ActivityManager
+import android.app.Activity
 import android.content.ContentResolver
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import androidx.activity.result.contract.ActivityResultContract
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.documentfile.provider.DocumentFile
@@ -56,26 +55,21 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
 
   private var monitorOn = true
 
-  private val contract = object : ActivityResultContract<Intent, Intent?>() {
-    override fun createIntent(context: Context, input: Intent): Intent {
-      return input
-    }
+  private val contract = ActivityResultContracts.StartActivityForResult()
 
-    override fun parseResult(resultCode: Int, intent: Intent?): Intent? {
-      return intent
-    }
-  }
+  // launcher for save file
   private val launcher = registerForActivityResult(contract) {
-    if (it != null) {
+
+    if (it.resultCode == Activity.RESULT_OK) {
       val contentResolver: ContentResolver = contentResolver
 
-      val takeFlags = it.flags.and(
+      val takeFlags = it.data?.flags?.and(
         (Intent.FLAG_GRANT_READ_URI_PERMISSION or
             Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
-      )
+      ) ?: throw RuntimeException("Not available takeFlags")
 
       //uri of the directory that will be writable
-      val folderUri: Uri = it.data ?: throw RuntimeException("Not available folderUri")
+      val folderUri: Uri = it.data?.data ?: throw RuntimeException("Not available folderUri")
 
       contentResolver.takePersistableUriPermission(folderUri, takeFlags)
       val pickedDir = DocumentFile.fromTreeUri(this, folderUri)
@@ -93,7 +87,7 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
     initObserveApp()
     initOnClickListenersApp()
 
-    if (isMyServiceRunning(ForegroundService::class.java)) {
+    if (ForegroundService.IS_SERVICE_RUNNING) {
       viewModel.getStartMonitorTime()
     } else {
       getStartTimeMonitoring(intent) // get extras from ForegroundService
@@ -234,17 +228,6 @@ class MainActivity : AppCompatActivity(), DefaultLifecycleObserver {
     stopIntent.putExtra(COMMAND_ID, COMMAND_STOP)
     stopIntent.putExtra(START_MONITOR, START_MONITORING_ERROR)
     startService(stopIntent)
-  }
-
-  private fun isMyServiceRunning(serviceClass: Class<*>): Boolean {
-    val manager = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-
-    for (service in manager.getRunningServices(Int.MAX_VALUE)) {
-      if (serviceClass.name.equals(service.service.className)) {
-        return true
-      }
-    }
-    return false
   }
 
   private fun initHideOfScroll() {

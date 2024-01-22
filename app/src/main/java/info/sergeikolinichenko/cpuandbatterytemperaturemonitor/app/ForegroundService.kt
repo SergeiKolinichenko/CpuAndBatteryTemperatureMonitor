@@ -8,7 +8,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.BatteryManager
-import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.R
@@ -17,7 +16,12 @@ import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.utils.TimeUti
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.app.utils.TimeUtils.getFullDate
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.domain.models.Temps
 import info.sergeikolinichenko.cpuandbatterytemperaturemonitor.domain.usecases.AddTemps
-import kotlinx.coroutines.*
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.io.BufferedReader
 import java.io.FileReader
 import javax.inject.Inject
@@ -75,6 +79,11 @@ class ForegroundService : Service() {
         return START_REDELIVER_INTENT
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        IS_SERVICE_RUNNING = false
+    }
+
     override fun onBind(p0: Intent?): IBinder? {
         return null
     }
@@ -98,7 +107,7 @@ class ForegroundService : Service() {
             startForegroundAndShowNotification()
             continueTimer()
         } finally {
-            isServiceStarted = true
+            IS_SERVICE_RUNNING = true
         }
     }
 
@@ -205,24 +214,20 @@ class ForegroundService : Service() {
     }
 
     private fun commandStop() {
-        if (!isServiceStarted) {
+        if (!IS_SERVICE_RUNNING) {
             return
         }
         try {
             job?.cancel()
-            stopForeground(true)
+            stopForeground(STOP_FOREGROUND_REMOVE)
             stopSelf()
         } finally {
-            isServiceStarted = false
+            IS_SERVICE_RUNNING = false
         }
     }
 
     private fun moveToStartedState() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(Intent(this, ForegroundService::class.java))
-        } else {
-            startService(Intent(this, ForegroundService::class.java))
-        }
+        startForegroundService(Intent(this, ForegroundService::class.java))
     }
 
     private fun startForegroundAndShowNotification() {
@@ -234,14 +239,12 @@ class ForegroundService : Service() {
     private fun getNotification(content: String) = builder.setContentText(content).build()
 
     private fun createChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channelName = "pomodoro"
-            val importance = NotificationManager.IMPORTANCE_DEFAULT
-            val notificationChannel = NotificationChannel(
-                CHANNEL_ID, channelName, importance
-            )
-            notificationManager?.createNotificationChannel(notificationChannel)
-        }
+        val channelName = "pomodoro"
+        val importance = NotificationManager.IMPORTANCE_DEFAULT
+        val notificationChannel = NotificationChannel(
+            CHANNEL_ID, channelName, importance
+        )
+        notificationManager?.createNotificationChannel(notificationChannel)
     }
 
     private fun getPendingIntent(): PendingIntent? {
@@ -275,5 +278,6 @@ class ForegroundService : Service() {
         const val NUMBER_OF_DATA_READ_CYCLES = 100
         const val STRING_SEPARATOR = ", "
         const val ITEM_SEPARATOR = ":"
+        var IS_SERVICE_RUNNING = false
     }
 }
